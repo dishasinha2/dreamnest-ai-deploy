@@ -1,0 +1,32 @@
+ :root{
+  --bg0: #0A0B14;
+  --bg1: #1A0F2A;
+  --bg2: #0B2F2E;
+  --ink: #FFF2E7;
+  --muted: rgba(255,242,231,.66);
+  --accent: #C9FF3A;        /* citrus neon */
+  --accent2:#FF7A45;        /* ember */
+  --accent3:#2AE5C0;        /* teal pop */
+  --card: rgba(255,255,255,.06);
+  --stroke: rgba(255,255,255,.14);
+  --shadow: 0 24px 70px rgba(0,0,0,.55);
+  --r-lg: 22px;
+  --r-md: 16px;
+
+  --font-display: "Fraunces", serif;
+  --font-body: "Figtree", sans-serif;
+}
+
+:root[data-theme="light"]{
+  --bg0: #FFF4EC;
+  --bg1: #F0E9FF;
+  --bg2: #E6FFF8;
+  --ink: #14121C;
+  --muted: rgba(20,18,28,.66);
+  --accent: #5E6BFF;
+  --accent2:#FF9A3D;
+  --accent3:#10C7B2;
+  --card: rgba(255,255,255,.85);
+  --stroke: rgba(22,19,31,.14);
+  --shadow: 0 22px 60px rgba(22,19,31,.2);
+}
