@@ -27,10 +27,15 @@ export default function Wishlist() {
 
   function removeItem(url) {
     const key = normalizeUrl(url);
-    const raw = JSON.parse(localStorage.getItem(WISHLIST_KEY) || "{}");
-    delete raw[key];
-    localStorage.setItem(WISHLIST_KEY, JSON.stringify(raw));
-    setItems(Object.values(raw));
+    try {
+      const raw = JSON.parse(localStorage.getItem(WISHLIST_KEY) || "{}");
+      delete raw[key];
+      localStorage.setItem(WISHLIST_KEY, JSON.stringify(raw));
+      setItems(Object.values(raw));
+    } catch {
+      localStorage.removeItem(WISHLIST_KEY);
+      setItems([]);
+    }
   }
 
   return (

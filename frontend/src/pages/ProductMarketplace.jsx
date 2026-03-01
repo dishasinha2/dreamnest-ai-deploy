@@ -5,6 +5,7 @@ import { ProductsAPI } from "../api/endpoints";
 const WISHLIST_KEY = "dreamnest_wishlist_items";
 const PAGE_SIZE_DEFAULT = 9;
 const AR_MODEL_KEY = "dreamnest_ar_models";
+const USER_PREF_KEY = "dreamnest_user_pref_v1";
 
 function normalizeUrl(url) {
   if (!url) return "#";
@@ -44,11 +45,53 @@ function setArModelMap(map) {
   localStorage.setItem(AR_MODEL_KEY, JSON.stringify(map));
 }
 
+function getUserPref() {
+  try {
+    const obj = JSON.parse(localStorage.getItem(USER_PREF_KEY) || "{}");
+    return obj && typeof obj === "object"
+      ? {
+          stores: obj.stores && typeof obj.stores === "object" ? obj.stores : {},
+          categories: obj.categories && typeof obj.categories === "object" ? obj.categories : {},
+          keywords: obj.keywords && typeof obj.keywords === "object" ? obj.keywords : {}
+        }
+      : { stores: {}, categories: {}, keywords: {} };
+  } catch {
+    return { stores: {}, categories: {}, keywords: {} };
+  }
+}
+
+function setUserPref(pref) {
+  localStorage.setItem(USER_PREF_KEY, JSON.stringify(pref));
+}
+
+function detectCategory(product) {
+  const text = `${product?.title || ""} ${product?.recommended_for || ""}`.toLowerCase();
+  if (/(lamp|light|lighting|pendant|ceiling)/.test(text)) return "lighting";
+  if (/(curtain|cushion|bedsheet|duvet|blanket|soft|fabric)/.test(text)) return "soft";
+  if (/(rug|carpet|decor|art|mirror|plant|clock|wall)/.test(text)) return "decor";
+  if (/(bed|mattress|wardrobe|dresser|bedside)/.test(text)) return "bedroom";
+  return "furniture";
+}
+
+function productKeywords(product) {
+  const words = `${product?.title || ""} ${product?.recommended_for || ""}`
+    .toLowerCase()
+    .split(/[^a-z0-9]+/g)
+    .filter(Boolean);
+  const stop = new Set(["for", "room", "with", "and", "the", "from", "set", "inch"]);
+  return Array.from(new Set(words.filter((w) => w.length > 3 && !stop.has(w)).slice(0, 8)));
+}
+
 export default function ProductMarketplace() {
   const nav = useNavigate();
   const { id } = useParams();
   const marketRaw = localStorage.getItem(`dreamnest_market_${id}`);
-  const market = marketRaw ? JSON.parse(marketRaw) : null;
+  let market = null;
+  try {
+    market = marketRaw ? JSON.parse(marketRaw) : null;
+  } catch {
+    market = null;
+  }
   const [products, setProducts] = useState(market?.items || []);
 
   const [query, setQuery] = useState("");
@@ -61,6 +104,7 @@ export default function ProductMarketplace() {
   );
   const [exactOnly, setExactOnly] = useState(Boolean(market?.prefs?.exact_only));
   const [wishlistMap, setWishlistState] = useState(getWishlistMap);
+  const [userPref, setUserPrefState] = useState(getUserPref);
   const [compare, setCompare] = useState([]);
   const [isLoadingMore, setIsLoadingMore] = useState(false);
   const [loadError, setLoadError] = useState("");
@@ -124,6 +168,18 @@ export default function ProductMarketplace() {
     const sorted = [...arr];
     if (sortBy === "relevance") {
       sorted.sort((a, b) => {
+        const score = (item) => {
+          const storeKey = String(item.source || "").toLowerCase();
+          const catKey = detectCategory(item);
+          const kws = productKeywords(item);
+          const storeScore = Number(userPref.stores?.[storeKey] || 0) * 5;
+          const catScore = Number(userPref.categories?.[catKey] || 0) * 3;
+          const kwScore = kws.reduce((acc, k) => acc + Number(userPref.keywords?.[k] || 0), 0);
+          return storeScore + catScore + kwScore;
+        };
+        const ds = score(b) - score(a);
+        if (ds !== 0) return ds;
+
         const sa = String(a.source || "").toLowerCase();
         const sb = String(b.source || "").toLowerCase();
         const ia = priority.indexOf(sa);
@@ -139,7 +195,7 @@ export default function ProductMarketplace() {
     if (sortBy === "store_asc") sorted.sort((a, b) => String(a.source || "").localeCompare(String(b.source || "")));
     if (sortBy === "name_asc") sorted.sort((a, b) => String(a.title || "").localeCompare(String(b.title || "")));
     return sorted;
-  }, [products, store, query, sortBy, storePriority, exactOnly]);
+  }, [products, store, query, sortBy, storePriority, exactOnly, userPref]);
 
   const totalPages = Math.max(1, Math.ceil(filtered.length / pageSize));
   const safePage = Math.min(page, totalPages);
@@ -150,7 +206,24 @@ export default function ProductMarketplace() {
     setIsLoadingMore(true);
     setLoadError("");
     try {
-      const roomHint = String(market.roomType || "living_room").replaceAll("_", " ");
+      const roomHint = String(market.roomType || market?.context?.room_type || "living_room")
+        .split(",")
+        .map((x) => x.trim())
+        .filter(Boolean)[0]
+        .replaceAll("_", " ");
+      const styleHints = (Array.isArray(market?.context?.style_tags) ? market.context.style_tags : String(market?.context?.style_tags || "").split(","))
+        .map((x) => String(x).trim())
+        .filter(Boolean)
+        .slice(0, 4);
+      const mustHaves = (Array.isArray(market?.context?.must_haves) ? market.context.must_haves : String(market?.context?.must_haves || "").split(","))
+        .map((x) => String(x).trim())
+        .filter(Boolean)
+        .slice(0, 8);
+      const colorHints = (Array.isArray(market?.context?.colors) ? market.context.colors : String(market?.context?.colors || "").split(","))
+        .map((x) => String(x).trim())
+        .filter(Boolean)
+        .slice(0, 5);
+
       const baseQueries = [
         `modern ${roomHint} furniture`,
         `${roomHint} lighting`,
@@ -158,10 +231,16 @@ export default function ProductMarketplace() {
         `${roomHint} storage furniture`,
         `${roomHint} accent chair`
       ];
+      styleHints.forEach((s) => {
+        baseQueries.push(`${s} ${roomHint} furniture`);
+        baseQueries.push(`${s} ${roomHint} decor`);
+      });
+      mustHaves.forEach((m) => baseQueries.push(`${roomHint} ${m}`));
+      colorHints.forEach((c) => baseQueries.push(`${c} ${roomHint} decor`));
       const existingHints = Array.from(
         new Set((products || []).map((p) => p.recommended_for).filter(Boolean))
       );
-      const queries = Array.from(new Set([...existingHints, ...baseQueries])).slice(0, 6);
+      const queries = Array.from(new Set([...existingHints, ...baseQueries])).slice(0, 14);
 
       const responses = await Promise.all(
         queries.map((q) =>
@@ -184,7 +263,7 @@ export default function ProductMarketplace() {
         if (!url || url === "#") continue;
         if (!mergedMap.has(url)) mergedMap.set(url, { ...item, product_url: url });
       }
-      const merged = Array.from(mergedMap.values()).slice(0, 120);
+      const merged = Array.from(mergedMap.values()).slice(0, 220);
       setProducts(merged);
       localStorage.setItem(
         `dreamnest_market_${id}`,
@@ -217,6 +296,7 @@ export default function ProductMarketplace() {
   function toggleWishlist(item) {
     const key = normalizeUrl(item.product_url);
     const next = { ...wishlistMap };
+    const wasInWishlist = Boolean(next[key]);
     if (next[key]) delete next[key];
     else {
       next[key] = {
@@ -227,6 +307,7 @@ export default function ProductMarketplace() {
     }
     setWishlistState(next);
     setWishlistMap(next);
+    learnFromAction(item, wasInWishlist ? 0.5 : 2);
   }
 
   function toggleCompare(item) {
@@ -238,6 +319,25 @@ export default function ProductMarketplace() {
     }
     if (compare.length >= 3) return;
     setCompare([...compare, item]);
+    learnFromAction(item, 1.2);
+  }
+
+  function learnFromAction(item, weight = 1) {
+    const storeKey = String(item?.source || "").toLowerCase();
+    const catKey = detectCategory(item);
+    const kws = productKeywords(item);
+    const next = {
+      stores: { ...(userPref.stores || {}) },
+      categories: { ...(userPref.categories || {}) },
+      keywords: { ...(userPref.keywords || {}) }
+    };
+    next.stores[storeKey] = Number(next.stores[storeKey] || 0) + weight;
+    next.categories[catKey] = Number(next.categories[catKey] || 0) + weight;
+    kws.forEach((k) => {
+      next.keywords[k] = Number(next.keywords[k] || 0) + Math.max(0.4, weight / 2);
+    });
+    setUserPrefState(next);
+    setUserPref(next);
   }
 
   function openPreview(item) {
@@ -394,8 +494,24 @@ export default function ProductMarketplace() {
                   <span className="market-source">{String(p.source || "").toUpperCase()}</span>
                 </div>
                 <div className="market-actions">
-                  <button className="btn" onClick={() => window.open(url, "_blank", "noopener,noreferrer")}>Buy now</button>
-                  <a className="btn btn-outline" href={url} target="_blank" rel="noreferrer">Open product</a>
+                  <button
+                    className="btn"
+                    onClick={() => {
+                      learnFromAction(p, 1.6);
+                      window.open(url, "_blank", "noopener,noreferrer");
+                    }}
+                  >
+                    Buy now
+                  </button>
+                  <button
+                    className="btn btn-outline"
+                    onClick={() => {
+                      learnFromAction(p, 1);
+                      window.open(url, "_blank", "noopener,noreferrer");
+                    }}
+                  >
+                    Open product
+                  </button>
                   <button
                     className={`btn btn-outline ${wished ? "is-wish" : ""}`}
                     onClick={() => toggleWishlist(p)}

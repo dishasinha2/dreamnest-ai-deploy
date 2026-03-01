@@ -17,6 +17,21 @@ const storage = multer.diskStorage({
 const upload = multer({ storage, limits: { fileSize: 6 * 1024 * 1024 } });
 export const vendorRoutes = express.Router();
 
+function safeJsonArray(value) {
+  if (!value) return [];
+  if (Array.isArray(value)) return value;
+  if (typeof value !== "string") return [];
+  const t = value.trim();
+  if (!t) return [];
+  if (!t.startsWith("[")) return t.split(",").map((s) => s.trim()).filter(Boolean);
+  try {
+    const parsed = JSON.parse(t);
+    return Array.isArray(parsed) ? parsed : [];
+  } catch {
+    return t.split(",").map((s) => s.trim()).filter(Boolean);
+  }
+}
+
 vendorRoutes.post("/admin/upload", adminAuth, upload.single("image"), async (req, res) => {
   if (!req.file) return res.status(400).json({ error: "image required" });
   const url = `/uploads/${req.file.filename}`;
@@ -29,8 +44,8 @@ vendorRoutes.get("/applications", adminAuth, async (req, res) => {
   );
   res.json(rows.map(r => ({
     ...r,
-    service_types: JSON.parse(r.service_types || "[]"),
-    portfolio_links: JSON.parse(r.portfolio_links || "[]")
+    service_types: safeJsonArray(r.service_types),
+    portfolio_links: safeJsonArray(r.portfolio_links)
   })));
 });
 
@@ -58,7 +73,7 @@ vendorRoutes.post("/applications/:id/approve", adminAuth, async (req, res) => {
     ]
   );
 
-  const links = JSON.parse(app.portfolio_links || "[]");
+  const links = safeJsonArray(app.portfolio_links);
   for (const link of links) {
     await db.execute(
       "INSERT INTO vendor_portfolio (vendor_id, title, image_url) VALUES (?,?,?)",
@@ -203,7 +218,7 @@ vendorRoutes.get("/", async (req, res) => {
 
   res.json(vendors.map(v => ({
     ...v,
-    service_types: JSON.parse(v.service_types || "[]"),
+    service_types: safeJsonArray(v.service_types),
     portfolio: grouped.get(v.id) || []
   })));
 });
@@ -232,7 +247,7 @@ vendorRoutes.get("/:id", async (req, res) => {
   const v = rows[0];
   res.json({
     ...v,
-    service_types: JSON.parse(v.service_types || "[]"),
+    service_types: safeJsonArray(v.service_types),
     portfolio,
     reviews,
     avg_rating: avg?.avg_rating || null,

@@ -1,6 +1,6 @@
 const PREFERRED_STORES = ["ikea", "flipkart", "myntra", "amazon", "pepperfry", "ebay"];
-const MAX_RESULTS = 120;
-const VERIFY_SAMPLE = 18;
+const MAX_RESULTS = 220;
+const VERIFY_SAMPLE = 24;
 
 const PRODUCT_FALLBACKS_BASE = [
   {
@@ -245,6 +245,15 @@ function storeRank(source, url, preferredStores) {
 function isProductPage(url) {
   if (!url) return false;
   const u = String(url).toLowerCase();
+  if (
+    u.includes("/search") ||
+    u.includes("?q=") ||
+    u.includes("/cat/") ||
+    u.includes("/products-products") ||
+    u.includes("/site_product/search")
+  ) {
+    return false;
+  }
   return (
     u.includes("/p/") ||
     u.includes("/product/") ||
@@ -252,13 +261,7 @@ function isProductPage(url) {
     u.includes("/dp/") ||
     u.includes("/item/") ||
     u.includes("pid=") ||
-    u.includes("-p-") ||
-    u.includes("ikea.com/in/en/search/?q=") ||
-    u.includes("flipkart.com/search?q=") ||
-    u.includes("myntra.com/search?q=") ||
-    u.includes("amazon.in/s?k=") ||
-    u.includes("pepperfry.com/site_product/search?q=") ||
-    u.includes("ebay.com/sch/i.html?_nkw=")
+    u.includes("-p-")
   );
 }
 
@@ -267,9 +270,59 @@ function isBadLanding(url) {
   return !u;
 }
 
+const CATEGORY_IMAGE_POOLS = {
+  sofa: [
+    "https://images.unsplash.com/photo-1493663284031-b7e3aefcae8e?q=80&w=1200&auto=format&fit=crop",
+    "https://images.unsplash.com/photo-1505691938895-1758d7feb511?q=80&w=1200&auto=format&fit=crop"
+  ],
+  table: [
+    "https://images.unsplash.com/photo-1505693416388-ac5ce068fe85?q=80&w=1200&auto=format&fit=crop",
+    "https://images.unsplash.com/photo-1507473885765-e6ed057f782c?q=80&w=1200&auto=format&fit=crop"
+  ],
+  bed: [
+    "https://images.unsplash.com/photo-1505693416388-ac5ce068fe85?q=80&w=1200&auto=format&fit=crop",
+    "https://images.unsplash.com/photo-1505693533128-c7c8d8a3d7d3?q=80&w=1200&auto=format&fit=crop"
+  ],
+  chair: [
+    "https://images.unsplash.com/photo-1524758631624-e2822e304c36?q=80&w=1200&auto=format&fit=crop",
+    "https://images.unsplash.com/photo-1484101403633-562f891dc89a?q=80&w=1200&auto=format&fit=crop"
+  ],
+  lighting: [
+    "https://images.unsplash.com/photo-1519710164239-da123dc03ef4?q=80&w=1200&auto=format&fit=crop",
+    "https://images.unsplash.com/photo-1502005097973-6a7082348e28?q=80&w=1200&auto=format&fit=crop"
+  ],
+  decor: [
+    "https://images.unsplash.com/photo-1505692794403-55c6f65f6e68?q=80&w=1200&auto=format&fit=crop",
+    "https://images.unsplash.com/photo-1519710164239-da123dc03ef4?q=80&w=1200&auto=format&fit=crop"
+  ],
+  default: [
+    "https://images.unsplash.com/photo-1493663284031-b7e3aefcae8e?q=80&w=1200&auto=format&fit=crop",
+    "https://images.unsplash.com/photo-1505691938895-1758d7feb511?q=80&w=1200&auto=format&fit=crop"
+  ]
+};
+
+function hashString(input) {
+  let h = 0;
+  for (let i = 0; i < input.length; i += 1) h = (h * 31 + input.charCodeAt(i)) >>> 0;
+  return h;
+}
+
+function pickCategory(title = "") {
+  const t = String(title).toLowerCase();
+  if (/(sofa|couch|recliner|ottoman|pouf|bean bag)/.test(t)) return "sofa";
+  if (/(table|desk|console|dining|study)/.test(t)) return "table";
+  if (/(bed|mattress|duvet|bedsheet|bedside)/.test(t)) return "bed";
+  if (/(chair|stool)/.test(t)) return "chair";
+  if (/(lamp|light|lighting|pendant|ceiling)/.test(t)) return "lighting";
+  if (/(rug|carpet|decor|mirror|art|clock|curtain|cushion|plant)/.test(t)) return "decor";
+  return "default";
+}
+
 function placeholderImage(title, source) {
-  const seed = encodeURIComponent(`${source || "store"}-${title || "product"}`);
-  return `https://picsum.photos/seed/${seed}/900/560`;
+  const key = pickCategory(title);
+  const pool = CATEGORY_IMAGE_POOLS[key] || CATEGORY_IMAGE_POOLS.default;
+  const idx = hashString(`${source || "store"}-${title || "product"}`) % pool.length;
+  return pool[idx];
 }
 
 function fallbackExactProducts(q, preferredStores) {
@@ -355,8 +408,8 @@ async function enrichImages(items, limit = 12) {
 }
 
 async function verifyProductLinks(items, exactOnly = false) {
-  const filtered = items.filter((item) => isProductPage(item.product_url) && !isBadLanding(item.product_url));
-  if (exactOnly) return filtered;
+  const filtered = items.filter((item) => !isBadLanding(item.product_url));
+  if (exactOnly) return filtered.filter((item) => isProductPage(item.product_url));
 
   const first = filtered.slice(0, VERIFY_SAMPLE);
   const rest = filtered.slice(VERIFY_SAMPLE);
@@ -402,7 +455,8 @@ export async function googleShoppingSearch({ query, location, max_price, store_p
 
   if (!apiKey) {
     const baseFallback = fallbackExactProducts(q, preferredStores);
-    const fallback = baseFallback.slice(0, MAX_RESULTS);
+    const verifiedFallback = await verifyProductLinks(baseFallback, exactOnly);
+    const fallback = verifiedFallback.slice(0, MAX_RESULTS);
     return { query: q, location: safeLocation, source: "fallback", results: fallback };
   }
 
@@ -416,7 +470,7 @@ export async function googleShoppingSearch({ query, location, max_price, store_p
       api_key: apiKey
     });
 
-    const r = await fetch(`https://serpapi.com/search.json?${params.toString()}`);
+    const r = await fetchWithTimeout(`https://serpapi.com/search.json?${params.toString()}`, 6000);
       if (!r.ok) {
         const baseFallback = fallbackExactProducts(q, preferredStores);
         const verifiedFallback = await verifyProductLinks(baseFallback, exactOnly);

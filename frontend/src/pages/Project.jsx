@@ -15,6 +15,50 @@ function uniqLimit(arr, limit = 24) {
   return Array.from(new Set(arr.map((x) => String(x).trim()).filter(Boolean))).slice(0, limit);
 }
 
+function detectProductCategory(product) {
+  const text = `${product?.title || ""} ${product?.recommended_for || ""}`.toLowerCase();
+  if (/(lamp|light|lighting|pendant|ceiling)/.test(text)) return "lighting";
+  if (/(curtain|cushion|bedsheet|duvet|blanket|soft|fabric)/.test(text)) return "soft";
+  if (/(rug|carpet|decor|art|mirror|plant|clock|wall)/.test(text)) return "decor";
+  return "furniture";
+}
+
+function buildBudgetBalancedList(items, maxItems = 220) {
+  const buckets = {
+    furniture: [],
+    lighting: [],
+    decor: [],
+    soft: []
+  };
+  for (const item of items) {
+    buckets[detectProductCategory(item)].push(item);
+  }
+
+  const targets = {
+    furniture: Math.round(maxItems * 0.45),
+    lighting: Math.round(maxItems * 0.12),
+    decor: Math.round(maxItems * 0.18),
+    soft: Math.round(maxItems * 0.1)
+  };
+
+  const out = [];
+  for (const key of ["furniture", "lighting", "decor", "soft"]) {
+    out.push(...buckets[key].slice(0, targets[key]));
+  }
+
+  if (out.length < maxItems) {
+    const seen = new Set(out.map((x) => x.product_url));
+    for (const item of items) {
+      if (out.length >= maxItems) break;
+      if (seen.has(item.product_url)) continue;
+      out.push(item);
+      seen.add(item.product_url);
+    }
+  }
+
+  return out.slice(0, maxItems);
+}
+
 export default function Project() {
   const { id } = useParams();
   const nav = useNavigate();
@@ -210,7 +254,7 @@ export default function Project() {
           }
         }
       }
-      const queries = uniqLimit([...aiQueries, ...generated], 8);
+      const queries = uniqLimit([...aiQueries, ...generated], 10);
       setNotice(`AI generated ${queries.length} smart shopping queries from requirements...`);
 
       const responses = await Promise.all(
@@ -253,7 +297,7 @@ export default function Project() {
         return ai - bi;
       });
       const diversified = [];
-      while (diversified.length < 120 && byStore.size) {
+      while (diversified.length < 220 && byStore.size) {
         for (const key of orderedStoreKeys) {
           if (!byStore.has(key)) continue;
           const arr = byStore.get(key);
@@ -262,13 +306,15 @@ export default function Project() {
             continue;
           }
           diversified.push(arr.shift());
-          if (diversified.length >= 120) break;
+          if (diversified.length >= 220) break;
           if (!arr.length) byStore.delete(key);
         }
       }
 
-      setLiveProducts(diversified);
-      if (diversified.length) {
+      const personalized = buildBudgetBalancedList(diversified, 220);
+
+      setLiveProducts(personalized);
+      if (personalized.length) {
         localStorage.setItem(
           `dreamnest_market_${id}`,
           JSON.stringify({
@@ -277,11 +323,18 @@ export default function Project() {
             roomType: project.room_type,
             location: project.location_city,
             budget: project.budget_inr,
-            items: diversified.slice(0, 120),
+            items: personalized.slice(0, 220),
+            context: {
+              room_type: project.room_type,
+              style_tags: project.style_tags,
+              must_haves: latestReq.must_haves || [],
+              colors: latestReq.colors || [],
+              notes: latestReq.notes || ""
+            },
             prefs: marketPrefs
           })
         );
-        setNotice("Opening DreamNest marketplace...");
+        setNotice("Opening DreamNest marketplace with budget-balanced personalized recommendations...");
         nav(`/project/${id}/marketplace`);
       } else {
         setNotice("No verified product page found for this query. Try a different keyword or enable SerpAPI.");
@@ -313,7 +366,7 @@ export default function Project() {
       const fd = new FormData();
       fd.append("image", vision.file);
       fd.append("budget_inr", project.budget_inr);
-      fd.append("style", project.style_tags.join(", "));
+      fd.append("style", asArray(project.style_tags).join(", "));
       const res = await AIAPI.vision(fd, token);
       setVision({ ...vision, result: res.ideas || "" });
     } catch (err) {
