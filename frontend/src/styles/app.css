@@ -24,6 +24,64 @@ img { display: block; }
 pre { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace; }
 
 .container { max-width: 1120px; margin: 0 auto; padding: 48px 20px; }
+.device-toggle {
+  position: fixed;
+  right: 20px;
+  top: 14px;
+  z-index: 95;
+  display: inline-flex;
+  gap: 8px;
+  padding: 6px;
+  border-radius: 999px;
+  border: 1px solid var(--stroke);
+  background: rgba(8, 12, 22, 0.75);
+  backdrop-filter: blur(8px);
+}
+.device-toggle .btn {
+  padding: 8px 12px;
+  font-size: 12px;
+}
+.device-toggle .btn.is-active {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+:root[data-device="phone"] .container {
+  max-width: 430px;
+  padding: 18px 12px 40px;
+}
+:root[data-device="phone"] .nav {
+  padding: 14px 8px;
+}
+:root[data-device="phone"] .nav-actions {
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+:root[data-device="phone"] .hero-title {
+  font-size: 36px;
+}
+:root[data-device="phone"] .dash-wrap,
+:root[data-device="phone"] .dash-main,
+:root[data-device="phone"] .grid-2,
+:root[data-device="phone"] .grid-3,
+:root[data-device="phone"] .market-grid,
+:root[data-device="phone"] .market-controls,
+:root[data-device="phone"] .market-controls-extended,
+:root[data-device="phone"] .market-pref-row,
+:root[data-device="phone"] .choice-grid {
+  grid-template-columns: 1fr !important;
+}
+:root[data-device="phone"] .chat-drawer {
+  width: calc(100vw - 24px);
+  right: 12px;
+  bottom: 82px;
+  top: auto;
+  height: 62vh;
+}
+:root[data-device="phone"] .chat-fab {
+  right: 14px;
+  bottom: 14px;
+}
 .card {
   background: var(--card);
   border: 1px solid var(--stroke);

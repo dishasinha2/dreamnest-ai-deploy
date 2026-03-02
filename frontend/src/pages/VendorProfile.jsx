@@ -5,6 +5,14 @@ import { useAuth } from "../hooks/useAuth";
 
 const BASE = import.meta.env.VITE_API_BASE || "http://localhost:5000";
 
+function normalizeUrl(url) {
+  if (!url) return "";
+  const t = String(url).trim();
+  if (!t) return "";
+  if (t.startsWith("http://") || t.startsWith("https://")) return t;
+  return `https://${t}`;
+}
+
 export default function VendorProfile() {
   const { id } = useParams();
   const { token } = useAuth();
@@ -53,8 +61,8 @@ export default function VendorProfile() {
         {vendor.about && <p className="muted">{vendor.about}</p>}
         <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
           {vendor.phone && <a className="btn btn-outline" href={`tel:${vendor.phone}`}>Call</a>}
-          {vendor.whatsapp && <a className="btn btn-outline" href={`https://wa.me/${vendor.whatsapp}`}>WhatsApp</a>}
-          {vendor.website && <a className="btn btn-outline" href={vendor.website} target="_blank" rel="noreferrer">Website</a>}
+          {vendor.whatsapp && <a className="btn btn-outline" href={`https://wa.me/${String(vendor.whatsapp).replace(/[^0-9]/g, "")}`}>WhatsApp</a>}
+          {vendor.website && <a className="btn btn-outline" href={normalizeUrl(vendor.website)} target="_blank" rel="noreferrer">Website</a>}
         </div>
       </div>
 

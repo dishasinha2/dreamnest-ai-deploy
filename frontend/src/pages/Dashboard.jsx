@@ -295,14 +295,19 @@ export default function Dashboard() {
                       { id: "office", label: "Office", img: "https://images.unsplash.com/photo-1524758631624-e2822e304c36?q=80&w=800&auto=format&fit=crop" },
                       { id: "kids_room", label: "Kids Room", img: "https://images.unsplash.com/photo-1519710164239-da123dc03ef4?q=80&w=800&auto=format&fit=crop" },
                       { id: "studio", label: "Studio", img: "https://images.unsplash.com/photo-1493663284031-b7e3aefcae8e?q=80&w=800&auto=format&fit=crop" },
-                      { id: "dining_room", label: "Dining", img: "https://images.unsplash.com/photo-1519710164239-da123dc03ef4?q=80&w=800&auto=format&fit=crop" },
-                      { id: "bathroom", label: "Bathroom", img: "https://images.unsplash.com/photo-1505691938895-1758d7feb511?q=80&w=800&auto=format&fit=crop" },
-                      { id: "balcony", label: "Balcony", img: "https://images.unsplash.com/photo-1502005097973-6a7082348e28?q=80&w=800&auto=format&fit=crop" },
-                      { id: "entryway", label: "Entryway", img: "https://images.unsplash.com/photo-1493663284031-b7e3aefcae8e?q=80&w=800&auto=format&fit=crop" },
-                      { id: "guest_room", label: "Guest Room", img: "https://images.unsplash.com/photo-1505691938895-1758d7feb511?q=80&w=800&auto=format&fit=crop" },
-                      { id: "pooja_room", label: "Pooja Room", img: "https://images.unsplash.com/photo-1502005097973-6a7082348e28?q=80&w=800&auto=format&fit=crop" },
-                      { id: "dressing_room", label: "Dressing", img: "https://images.unsplash.com/photo-1493663284031-b7e3aefcae8e?q=80&w=800&auto=format&fit=crop" },
-                      { id: "laundry", label: "Laundry", img: "https://images.unsplash.com/photo-1556912173-3bb406ef7e77?q=80&w=800&auto=format&fit=crop" }
+                    { id: "dining_room", label: "Dining", img: "https://images.unsplash.com/photo-1519710164239-da123dc03ef4?q=80&w=800&auto=format&fit=crop" },
+                    { id: "bathroom", label: "Bathroom", img: "https://images.unsplash.com/photo-1505691938895-1758d7feb511?q=80&w=800&auto=format&fit=crop" },
+                    { id: "balcony", label: "Balcony", img: "https://images.unsplash.com/photo-1502005097973-6a7082348e28?q=80&w=800&auto=format&fit=crop" },
+                    { id: "entryway", label: "Entryway", img: "https://images.unsplash.com/photo-1493663284031-b7e3aefcae8e?q=80&w=800&auto=format&fit=crop" },
+                    { id: "guest_room", label: "Guest Room", img: "https://images.unsplash.com/photo-1505691938895-1758d7feb511?q=80&w=800&auto=format&fit=crop" },
+                    { id: "pooja_room", label: "Pooja Room", img: "https://images.unsplash.com/photo-1502005097973-6a7082348e28?q=80&w=800&auto=format&fit=crop" },
+                    { id: "dressing_room", label: "Dressing", img: "https://images.unsplash.com/photo-1493663284031-b7e3aefcae8e?q=80&w=800&auto=format&fit=crop" },
+                    { id: "laundry", label: "Laundry", img: "https://images.unsplash.com/photo-1556912173-3bb406ef7e77?q=80&w=800&auto=format&fit=crop" },
+                    { id: "home_theatre", label: "Home Theatre", img: "https://images.unsplash.com/photo-1489515217757-5fd1be406fef?q=80&w=800&auto=format&fit=crop" },
+                    { id: "terrace", label: "Terrace", img: "https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?q=80&w=800&auto=format&fit=crop" },
+                    { id: "kids_study", label: "Kids Study", img: "https://images.unsplash.com/photo-1600210492486-724fe5c67fb0?q=80&w=800&auto=format&fit=crop" },
+                    { id: "walkin_closet", label: "Walk-in Closet", img: "https://images.unsplash.com/photo-1556020685-ae41abfc9365?q=80&w=800&auto=format&fit=crop" },
+                    { id: "gaming_room", label: "Gaming Room", img: "https://images.unsplash.com/photo-1616588589676-62b3bd0f9e13?q=80&w=800&auto=format&fit=crop" }
                     ].map((r) => {
                       const roomSet = new Set((form.room_type || "").split(",").map(s => s.trim()).filter(Boolean));
                       const selected = roomSet.has(r.id);
@@ -354,7 +359,13 @@ export default function Dashboard() {
                     { id: "coastal", label: "Coastal", img: "https://images.unsplash.com/photo-1502005097973-6a7082348e28?q=80&w=800&auto=format&fit=crop" },
                     { id: "rustic", label: "Rustic", img: "https://images.unsplash.com/photo-1519710164239-da123dc03ef4?q=80&w=800&auto=format&fit=crop" },
                     { id: "japandi", label: "Japandi", img: "https://images.unsplash.com/photo-1484101403633-562f891dc89a?q=80&w=800&auto=format&fit=crop" },
-                    { id: "traditional", label: "Traditional", img: "https://images.unsplash.com/photo-1449844908441-8829872d2607?q=80&w=800&auto=format&fit=crop" }
+                    { id: "traditional", label: "Traditional", img: "https://images.unsplash.com/photo-1449844908441-8829872d2607?q=80&w=800&auto=format&fit=crop" },
+                    { id: "contemporary", label: "Contemporary", img: "https://images.unsplash.com/photo-1600607687644-c7f34b5f11c8?q=80&w=800&auto=format&fit=crop" },
+                    { id: "mid_century", label: "Mid-century", img: "https://images.unsplash.com/photo-1617104551722-3b2d51366464?q=80&w=800&auto=format&fit=crop" },
+                    { id: "wabi_sabi", label: "Wabi-sabi", img: "https://images.unsplash.com/photo-1615875605825-5eb9bb5d52cb?q=80&w=800&auto=format&fit=crop" },
+                    { id: "mediterranean", label: "Mediterranean", img: "https://images.unsplash.com/photo-1513694203232-719a280e022f?q=80&w=800&auto=format&fit=crop" },
+                    { id: "maximalist", label: "Maximalist", img: "https://images.unsplash.com/photo-1493666438817-866a91353ca9?q=80&w=800&auto=format&fit=crop" },
+                    { id: "minimal_luxe", label: "Minimal Luxe", img: "https://images.unsplash.com/photo-1600210492493-0946911123ea?q=80&w=800&auto=format&fit=crop" }
                   ].map((r) => {
                     const tags = new Set((form.style_tags || "").split(",").map(s => s.trim()).filter(Boolean));
                     const selected = tags.has(r.id);

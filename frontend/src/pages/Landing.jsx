@@ -50,8 +50,8 @@ export default function Landing() {
             Design your home with a real studio workflow.
           </motion.h1>
           <motion.p variants={item} className="hero-sub muted">
-            Budget + location + aesthetics → AI layout plan, real product links, and local vendors.
-            Upload a room image → decor ideas + Pinterest keywords.
+            Budget + location + aesthetics {"->"} AI layout plan, real product links, and local vendors.
+            Upload a room image {"->"} decor ideas + Pinterest keywords.
           </motion.p>
           <div className="pill-row">
             {["Budget plan", "Furniture links", "Local vendors", "Vision ideas", "Chatbot progress"].map((t) => (
@@ -121,6 +121,16 @@ export default function Landing() {
               <img src="https://images.unsplash.com/photo-1501876725168-00c445821c9e?q=80&w=1200&auto=format&fit=crop" alt="Studio" />
               <img src="https://images.unsplash.com/photo-1524758631624-e2822e304c36?q=80&w=1200&auto=format&fit=crop" alt="Desk" />
             </div>
+          </div>
+        </motion.div>
+
+        <motion.div variants={item} className="card reveal-block" style={{ marginTop: 20 }}>
+          <div className="section-title">Expanded Design Library</div>
+          <p className="muted">More room types and aesthetics are now supported in project creation for better personalization.</p>
+          <div className="pill-row">
+            {["Home Theatre", "Terrace", "Walk-in Closet", "Gaming Room", "Mid-century", "Wabi-sabi", "Mediterranean", "Minimal Luxe"].map((x) => (
+              <div key={x} className="feature-pill">{x}</div>
+            ))}
           </div>
         </motion.div>
 

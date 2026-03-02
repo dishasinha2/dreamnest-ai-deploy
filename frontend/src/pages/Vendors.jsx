@@ -9,6 +9,7 @@ export default function Vendors() {
   const [city, setCity] = useState("");
   const [vendors, setVendors] = useState([]);
   const [error, setError] = useState("");
+  const [notice, setNotice] = useState("");
   const [step, setStep] = useState(0);
   const [previews, setPreviews] = useState([]);
   const [apply, setApply] = useState({
@@ -30,9 +31,18 @@ export default function Vendors() {
       .catch((e) => setError(String(e.message || e)));
   }, [city]);
 
+  function normalizeUrl(url) {
+    if (!url) return "";
+    const t = String(url).trim();
+    if (!t) return "";
+    if (t.startsWith("http://") || t.startsWith("https://")) return t;
+    return `https://${t}`;
+  }
+
   async function submitApply(e) {
     e.preventDefault();
     setError("");
+    setNotice("");
     try {
       if (apply.files.length) {
         const fd = new FormData();
@@ -56,7 +66,11 @@ export default function Vendors() {
       setApply({ ...apply, name: "", phone: "", whatsapp: "", website: "", about: "", portfolio_links: "", files: [] });
       setPreviews([]);
       setStep(0);
-      setError("Application submitted. We will review it soon.");
+      setNotice("Application submitted. We will review it soon.");
+      if (city) {
+        const next = await VendorsAPI.list({ city });
+        setVendors(next);
+      }
     } catch (err) {
       setError(String(err.message || err));
     }
@@ -113,10 +127,10 @@ export default function Vendors() {
               <div key={v.id} className="card" style={{ boxShadow: "none" }}>
                 <div style={{ fontFamily: "var(--font-display)" }}>{v.name}</div>
                 <div className="muted">{v.city} - {v.years_exp} yrs</div>
-                <div className="muted">Rating {v.avg_rating || "—"} ({v.review_count || 0})</div>
+                <div className="muted">Rating {v.avg_rating || "-"} ({v.review_count || 0})</div>
                 <div className="muted">Services: {(v.service_types || []).join(", ")}</div>
                 {v.website && (
-                  <a className="btn btn-outline" href={v.website} target="_blank" rel="noreferrer">
+                  <a className="btn btn-outline" href={normalizeUrl(v.website)} target="_blank" rel="noreferrer">
                     Visit site
                   </a>
                 )}
@@ -140,10 +154,10 @@ export default function Vendors() {
 
         <div className="card">
           <h3 style={{ fontFamily: "var(--font-display)" }}>Apply as a vendor</h3>
-            <div className="glass-panel" style={{ marginBottom: 12 }}>
-              <div className="section-sub">Why join DreamNest</div>
-              <div className="muted">Get qualified leads and showcase your best work.</div>
-            </div>
+          <div className="glass-panel" style={{ marginBottom: 12 }}>
+            <div className="section-sub">Why join DreamNest</div>
+            <div className="muted">Get qualified leads and showcase your best work.</div>
+          </div>
           <div className="stepper">
             {[0,1,2].map((s)=>(
               <div key={s} className={`step-dot ${step===s ? "active":""}`}>{s+1}</div>
@@ -153,7 +167,32 @@ export default function Vendors() {
             {step === 0 && (
               <>
                 <input className="input" placeholder="Business name" value={apply.name} onChange={(e) => setApply({ ...apply, name: e.target.value })} />
-                <input className="input" placeholder="City" value={apply.city} onChange={(e) => setApply({ ...apply, city: e.target.value })} />
+                <div style={{ display: "flex", gap: 8 }}>
+                  <input className="input" placeholder="City" value={apply.city} onChange={(e) => setApply({ ...apply, city: e.target.value })} />
+                  <button
+                    type="button"
+                    className="btn btn-outline"
+                    onClick={() => {
+                      if (!navigator.geolocation) return;
+                      navigator.geolocation.getCurrentPosition(async (pos) => {
+                        const { latitude, longitude } = pos.coords;
+                        try {
+                          const r = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}`);
+                          const data = await r.json();
+                          const cityName =
+                            data.address?.city ||
+                            data.address?.town ||
+                            data.address?.village ||
+                            data.address?.state ||
+                            "";
+                          if (cityName) setApply((p) => ({ ...p, city: cityName }));
+                        } catch {}
+                      });
+                    }}
+                  >
+                    Detect
+                  </button>
+                </div>
                 <input className="input" placeholder="Services (comma separated)" value={apply.service_types} onChange={(e) => setApply({ ...apply, service_types: e.target.value })} />
                 <input className="input" placeholder="Years experience" type="number" value={apply.years_exp} onChange={(e) => setApply({ ...apply, years_exp: e.target.value })} />
               </>
@@ -190,6 +229,7 @@ export default function Vendors() {
               </>
             )}
             {error && <div className="muted">{error}</div>}
+            {notice && <div className="muted">{notice}</div>}
             <div style={{ display: "flex", gap: 10 }}>
               {step > 0 && (
                 <button type="button" className="btn btn-outline" onClick={() => setStep(step - 1)}>Back</button>
