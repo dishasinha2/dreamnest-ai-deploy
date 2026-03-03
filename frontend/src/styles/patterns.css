@@ -1,9 +1,9 @@
 .bg-atmos {
   background:
-    radial-gradient(1100px 800px at 8% 14%, rgba(207,155,116,.25), transparent 62%),
-    radial-gradient(900px 700px at 88% 20%, rgba(137,162,135,.22), transparent 62%),
-    radial-gradient(1000px 700px at 72% 88%, rgba(213,181,113,.20), transparent 60%),
-    radial-gradient(760px 540px at 35% 65%, rgba(255,255,255,.12), transparent 62%),
+    radial-gradient(1200px 860px at 8% 12%, rgba(195,161,113,.2), transparent 62%),
+    radial-gradient(980px 760px at 88% 18%, rgba(127,154,162,.2), transparent 62%),
+    radial-gradient(980px 740px at 72% 88%, rgba(155,177,125,.16), transparent 60%),
+    radial-gradient(760px 540px at 35% 65%, rgba(255,255,255,.08), transparent 62%),
     linear-gradient(160deg, var(--bg0), var(--bg1), var(--bg2));
   min-height: 100vh;
   color: var(--ink);
@@ -11,10 +11,10 @@
 
 :root[data-theme="light"] .bg-atmos {
   background:
-    radial-gradient(1100px 800px at 100% 82%, rgba(182,120,78,.26), transparent 60%),
-    radial-gradient(1000px 700px at 88% 88%, rgba(93,122,100,.23), transparent 60%),
-    radial-gradient(900px 650px at 90% 82%, rgba(162,131,63,.20), transparent 60%),
-    radial-gradient(800px 600px at 80% 55%, rgba(255,255,255,.42), transparent 60%),
+    radial-gradient(1100px 800px at 100% 82%, rgba(165,116,69,.2), transparent 60%),
+    radial-gradient(1000px 700px at 88% 88%, rgba(93,127,138,.2), transparent 60%),
+    radial-gradient(900px 650px at 90% 82%, rgba(110,143,88,.16), transparent 60%),
+    radial-gradient(800px 600px at 80% 55%, rgba(255,255,255,.46), transparent 60%),
     linear-gradient(160deg, var(--bg0), var(--bg1), var(--bg2));
 }
 

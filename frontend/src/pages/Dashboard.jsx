@@ -591,7 +591,10 @@ export default function Dashboard() {
       </div>
 
       <button className="chat-fab" onClick={() => setChatOpen(!chatOpen)} aria-label="Open chatbot">
-        <span aria-hidden="true">Bot</span>
+        <svg className="chat-fab-icon" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+          <path d="M12 3v3M8 8h8a3 3 0 0 1 3 3v5a3 3 0 0 1-3 3h-2l-2 2-2-2H8a3 3 0 0 1-3-3v-5a3 3 0 0 1 3-3Z" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
+          <path d="M10 13h.01M14 13h.01" strokeWidth="2.2" strokeLinecap="round"/>
+        </svg>
         <span className="chat-fab-badge">1</span>
       </button>
       {chatOpen && (

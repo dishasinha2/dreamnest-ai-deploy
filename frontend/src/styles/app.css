@@ -163,12 +163,27 @@ pre { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liber
   padding: 22px 20px;
 }
 .nav-brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
   font-family: var(--font-display);
   letter-spacing: .5px;
-  font-size: 20px;
+  font-size: 34px;
+}
+.nav-brand::before {
+  content: "";
+  width: 34px;
+  height: 34px;
+  border-radius: 11px;
+  background:
+    radial-gradient(circle at 35% 30%, rgba(255,255,255,.9), rgba(255,255,255,.15) 42%, transparent 46%),
+    linear-gradient(145deg, var(--accent), var(--accent2));
+  border: 1px solid rgba(255,255,255,.34);
+  box-shadow: 0 8px 18px rgba(0,0,0,.3);
+  flex: 0 0 auto;
 }
 .nav-sub {
-  font-size: 12px;
+  font-size: 14px;
   color: var(--muted);
 }
 .nav-actions { display: flex; gap: 10px; align-items: center; }
@@ -214,7 +229,13 @@ pre { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liber
   box-shadow: var(--shadow);
   z-index: 60;
 }
-.chat-fab span[role="img"] { font-size: 22px; }
+.chat-fab-icon {
+  width: 24px;
+  height: 24px;
+}
+.chat-fab-icon path {
+  stroke: #0B0F14;
+}
 .chat-send {
   display: inline-flex;
   align-items: center;
