@@ -100,7 +100,7 @@ export default function ProductMarketplace() {
   const [pageSize, setPageSize] = useState(PAGE_SIZE_DEFAULT);
   const [page, setPage] = useState(1);
   const [storePriority, setStorePriority] = useState(
-    market?.prefs?.store_priority || "ikea,flipkart,myntra,amazon,pepperfry,ebay"
+    market?.prefs?.store_priority || "ikea,flipkart,myntra,amazon,pepperfry,urbanladder,meesho,ebay"
   );
   const [exactOnly, setExactOnly] = useState(Boolean(market?.prefs?.exact_only));
   const [wishlistMap, setWishlistState] = useState(getWishlistMap);
@@ -414,7 +414,7 @@ export default function ProductMarketplace() {
               setPage(1);
               setStorePriority(e.target.value);
             }}
-            placeholder="Store priority: ikea,flipkart,myntra,amazon,pepperfry,ebay"
+            placeholder="Store priority: ikea,flipkart,myntra,amazon,pepperfry,urbanladder,meesho,ebay"
           />
           <label className="muted market-exact-toggle">
             <input

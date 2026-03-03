@@ -13,7 +13,7 @@ export default function Dashboard() {
   const [chatImagePreview, setChatImagePreview] = useState("");
   const [isTyping, setIsTyping] = useState(false);
   const [chatHistory, setChatHistory] = useState([
-    { role: "assistant", text: "Hi, I'm Nestie. Tumhara DreamNest buddy. Batao, kis room ke liye help chahiye? Budget aur style bhi share karo." }
+    { role: "assistant", text: "Hi, I'm Nestie. Tumhara DreamNest buddy. Batao, kis room ke liye help chahiye? Budget aur style bhi share karo.", links: [] }
   ]);
   const [userName, setUserName] = useState("");
   const chatEndRef = useRef(null);
@@ -121,9 +121,26 @@ export default function Dashboard() {
       setChatHistory((h) => [...h, { role: "user", text: message }]);
       setChat((c) => ({ ...c, message: "" }));
       setIsTyping(true);
-      const res = await AIAPI.chat({ message }, token);
+      const roomTypes = (form.room_type || "").split(",").map((s) => s.trim()).filter(Boolean);
+      const styles = (form.style_tags || "").split(",").map((s) => s.trim()).filter(Boolean);
+      const res = await AIAPI.chat(
+        {
+          message,
+          room_type: roomTypes[0] || "living_room",
+          style_tags: styles,
+          notes: `Dashboard quick chat. City: ${form.location_city || "not set"}`
+        },
+        token
+      );
       const reply = res.reply || "Sorry, reply generate nahi ho paaya. Please try again.";
-      setChatHistory((h) => [...h, { role: "assistant", text: reply }]);
+      setChatHistory((h) => [
+        ...h,
+        {
+          role: "assistant",
+          text: reply,
+          links: Array.isArray(res.links) ? res.links : []
+        }
+      ]);
       setChat((c) => ({ ...c, reply }));
     } catch (err) {
       setError(String(err.message || err));
@@ -178,8 +195,8 @@ export default function Dashboard() {
   }
 
   return (
-    <div className="container">
-      <div className="nav">
+    <div className="container studio-page">
+      <div className="nav studio-nav">
         <div className="nav-brand">
           <span style={{ color: "var(--accent)" }}>Dream</span>Nest AI
           <div className="nav-sub">Welcome{userName ? `, ${userName}` : ""}</div>
@@ -192,9 +209,31 @@ export default function Dashboard() {
         </div>
       </div>
 
+      <div className="card studio-header-band">
+        <div>
+          <div className="studio-kicker">Interior Designer Workspace</div>
+          <h2>Plan rooms like a design studio, not a form wizard</h2>
+          <p className="muted">Build brief, define aesthetics, lock budget, and move into sourced products and vendor execution.</p>
+        </div>
+        <div className="studio-mini-metrics">
+          <div className="studio-mini-metric">
+            <span>Projects</span>
+            <strong>{projects.length}</strong>
+          </div>
+          <div className="studio-mini-metric">
+            <span>Budget Target</span>
+            <strong>{formatINR(form.budget_inr)}</strong>
+          </div>
+          <div className="studio-mini-metric">
+            <span>Planned Spend</span>
+            <strong>{formatINR(plannedTotal)}</strong>
+          </div>
+        </div>
+      </div>
+
       <div className="dash-wrap">
         <aside className="dash-side">
-          <div className="card">
+          <div className="card studio-side-card">
             <div className="panel-title">Studio Panel</div>
             <div className="muted">Your workspace for design, budget, and vendor flow.</div>
             <div className="icon-row" style={{ justifyContent: "flex-start", marginTop: 10 }}>
@@ -210,7 +249,7 @@ export default function Dashboard() {
               ))}
             </div>
           </div>
-          <div className="card" style={{ marginTop: 12 }}>
+          <div className="card studio-side-card" style={{ marginTop: 12 }}>
             <div className="panel-title">Stats</div>
             <div className="stats-grid">
               <div className="stat-card">
@@ -244,12 +283,12 @@ export default function Dashboard() {
               </div>
             )}
           </div>
-          <div className="card" style={{ marginTop: 12 }}>
+          <div className="card studio-side-card" style={{ marginTop: 12 }}>
             <a className="side-link" href="/about">Intro</a>
             <a className="side-link" href="/vendors">Vendor Marketplace</a>
             <a className="side-link" href="/feedback">Feedback</a>
           </div>
-          <div className="card" style={{ marginTop: 12 }}>
+          <div className="card studio-side-card" style={{ marginTop: 12 }}>
             <div className="panel-title">Status</div>
             <div className="muted">Projects: {projects.length}</div>
             <div className="muted">Step: {step + 1} / 3</div>
@@ -257,7 +296,7 @@ export default function Dashboard() {
         </aside>
 
         <div className="dash-main">
-          <div className="card">
+          <div className="card studio-main-card">
             <h3 style={{ fontFamily: "var(--font-display)" }}>Design Brief Wizard</h3>
             <p className="muted">Step {step + 1} of 3</p>
             <div className="progress-bar" style={{ marginBottom: 12 }}>
@@ -482,7 +521,7 @@ export default function Dashboard() {
             </form>
           </div>
 
-          <div className="card">
+          <div className="card studio-main-card">
             <h3 style={{ fontFamily: "var(--font-display)" }}>Your projects</h3>
             <div className="glass-panel" style={{ marginBottom: 12 }}>
               <div className="section-sub">Quick Start</div>
@@ -564,7 +603,16 @@ export default function Dashboard() {
           <div className="chat-messages">
             {chatHistory.map((m, idx) => (
               <div key={idx} className={`chat-bubble ${m.role === "user" ? "user" : "assistant"}`}>
-                {m.text}
+                <div>{m.text}</div>
+                {m.role === "assistant" && Array.isArray(m.links) && m.links.length > 0 && (
+                  <div style={{ marginTop: 8, display: "flex", gap: 6, flexWrap: "wrap" }}>
+                    {m.links.map((p) => (
+                      <a key={`${idx}-${p.url}`} className="badge" href={p.url} target="_blank" rel="noreferrer">
+                        {p.keyword}
+                      </a>
+                    ))}
+                  </div>
+                )}
               </div>
             ))}
             {isTyping && <div className="chat-bubble assistant">Typing...</div>}

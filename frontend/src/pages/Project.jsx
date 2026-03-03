@@ -73,7 +73,7 @@ export default function Project() {
   const [vendors, setVendors] = useState([]);
   const [shortlistedVendors, setShortlistedVendors] = useState([]);
   const [vendorNotice, setVendorNotice] = useState("");
-  const [chat, setChat] = useState({ message: "", reply: "" });
+  const [chat, setChat] = useState({ message: "", reply: "", links: [] });
   const [vision, setVision] = useState({ file: null, result: "" });
   const [pinterestLinks, setPinterestLinks] = useState([]);
   const [pinterestLoading, setPinterestLoading] = useState(false);
@@ -81,7 +81,7 @@ export default function Project() {
   const [error, setError] = useState("");
   const [notice, setNotice] = useState("");
   const [marketPrefs, setMarketPrefs] = useState({
-    store_priority: "ikea,flipkart,myntra,amazon,pepperfry,ebay",
+    store_priority: "ikea,flipkart,myntra,amazon,pepperfry,urbanladder,meesho,ebay",
     exact_only: false
   });
   const [checkMap, setCheckMap] = useState({});
@@ -351,8 +351,23 @@ export default function Project() {
     if (!chat.message) return;
     setError("");
     try {
-      const res = await AIAPI.chat({ message: chat.message, project_id: Number(id) }, token);
-      setChat({ message: "", reply: res.reply || "" });
+      const res = await AIAPI.chat(
+        {
+          message: chat.message,
+          project_id: Number(id),
+          room_type: project.room_type,
+          style_tags: project.style_tags,
+          must_haves: latestReq.must_haves || [],
+          colors: latestReq.colors || [],
+          notes: latestReq.notes || ""
+        },
+        token
+      );
+      setChat({
+        message: "",
+        reply: res.reply || "",
+        links: Array.isArray(res.links) ? res.links : []
+      });
     } catch (err) {
       setError(String(err.message || err));
     }
@@ -514,8 +529,8 @@ export default function Project() {
   }
 
   return (
-    <div className="container">
-      <div className="nav">
+    <div className="container studio-page">
+      <div className="nav studio-nav">
         <div className="nav-brand">
           <span style={{ color: "var(--accent)" }}>Dream</span>Nest AI
         </div>
@@ -523,6 +538,30 @@ export default function Project() {
           <a className="btn btn-outline" href="/dashboard">Dashboard</a>
           <a className="btn btn-outline" href="/vendors">Vendors</a>
           <a className="btn btn-outline" href="/feedback">Feedback</a>
+        </div>
+      </div>
+
+      <div className="card studio-header-band">
+        <div>
+          <div className="studio-kicker">Project Design Board</div>
+          <h2>{project.title}</h2>
+          <p className="muted">
+            {project.room_type} in {project.location_city} | {project.area_sqft} sqft | Budget INR {project.budget_inr}
+          </p>
+        </div>
+        <div className="studio-mini-metrics">
+          <div className="studio-mini-metric">
+            <span>Room Type</span>
+            <strong>{asArray(project.room_type).slice(0, 1)[0] || "N/A"}</strong>
+          </div>
+          <div className="studio-mini-metric">
+            <span>Styles</span>
+            <strong>{asArray(project.style_tags).slice(0, 2).join(", ") || "N/A"}</strong>
+          </div>
+          <div className="studio-mini-metric">
+            <span>Live Sources</span>
+            <strong>eCom + Vendors</strong>
+          </div>
         </div>
       </div>
 
@@ -580,7 +619,7 @@ export default function Project() {
                 className="input"
                 value={marketPrefs.store_priority}
                 onChange={(e) => setMarketPrefs((p) => ({ ...p, store_priority: e.target.value }))}
-                placeholder="Store priority: ikea,flipkart,myntra,amazon,pepperfry,ebay"
+                placeholder="Store priority: ikea,flipkart,myntra,amazon,pepperfry,urbanladder,meesho,ebay"
               />
               <label className="muted" style={{ display: "flex", alignItems: "center", gap: 8 }}>
                 <input
@@ -808,7 +847,20 @@ export default function Project() {
             />
             <button className="btn btn-accent2" type="submit">Ask</button>
           </form>
-          {chat.reply && <div className="card" style={{ marginTop: 12, boxShadow: "none" }}>{chat.reply}</div>}
+          {chat.reply && (
+            <div className="card" style={{ marginTop: 12, boxShadow: "none" }}>
+              <div>{chat.reply}</div>
+              {Array.isArray(chat.links) && chat.links.length > 0 && (
+                <div style={{ marginTop: 10, display: "flex", gap: 8, flexWrap: "wrap" }}>
+                  {chat.links.map((p) => (
+                    <a key={p.url} className="badge" href={p.url} target="_blank" rel="noreferrer">
+                      {p.keyword}
+                    </a>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
         </div>
 
         <div className="glass-stack">

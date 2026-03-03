@@ -1,4 +1,4 @@
-const PREFERRED_STORES = ["ikea", "flipkart", "myntra", "amazon", "pepperfry", "ebay"];
+const PREFERRED_STORES = ["ikea", "flipkart", "myntra", "amazon", "pepperfry", "urbanladder", "meesho", "ebay"];
 const MAX_RESULTS = 220;
 const VERIFY_SAMPLE = 24;
 
@@ -190,6 +190,8 @@ function buildStoreUrl(store, keyword) {
   if (store === "Myntra") return `https://www.myntra.com/search?q=${q}`;
   if (store === "Amazon") return `https://www.amazon.in/s?k=${q}`;
   if (store === "Pepperfry") return `https://www.pepperfry.com/site_product/search?q=${q}`;
+  if (store === "UrbanLadder") return `https://www.urbanladder.com/search?text=${q}`;
+  if (store === "Meesho") return `https://www.meesho.com/search?q=${q}`;
   return `https://www.ebay.com/sch/i.html?_nkw=${q}`;
 }
 
@@ -200,6 +202,8 @@ function buildBulkFallbacks() {
     { name: "Myntra", mult: 0.74 },
     { name: "Amazon", mult: 0.95 },
     { name: "Pepperfry", mult: 1.03 },
+    { name: "UrbanLadder", mult: 1.06 },
+    { name: "Meesho", mult: 0.69 },
     { name: "eBay", mult: 0.89 }
   ];
   const out = [];

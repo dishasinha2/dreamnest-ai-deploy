@@ -76,8 +76,48 @@ function fallbackPinterest({ room_type, style_tags, must_haves, colors }) {
   }));
 }
 
+function wantsPinterestLinks(message) {
+  const text = String(message || "").toLowerCase();
+  return /\b(pinterest|pin)\b|mood\s?board|inspiration|inspo|decor ideas?/.test(text);
+}
+
+async function generatePinterestLinks(payload = {}) {
+  const { room_type, style_tags, must_haves, colors, notes } = payload;
+  const fallback = fallbackPinterest({ room_type, style_tags, must_haves, colors });
+  try {
+    const data = await openaiResponse({
+      input: [
+        {
+          role: "system",
+          content:
+            "Return JSON only with key `keywords` as array of 10-14 short Pinterest search phrases for room decor and furniture."
+        },
+        {
+          role: "user",
+          content: JSON.stringify({
+            room_type,
+            style_tags: safeArray(style_tags),
+            must_haves: safeArray(must_haves),
+            colors: safeArray(colors),
+            notes: notes || ""
+          })
+        }
+      ]
+    });
+    const parsed = JSON.parse(data.output_text || "{}");
+    const kws = Array.isArray(parsed.keywords) ? parsed.keywords : [];
+    const links = Array.from(new Set(kws.map((x) => String(x).trim()).filter(Boolean))).slice(0, 14).map((k) => ({
+      keyword: k,
+      url: `https://www.pinterest.com/search/pins/?q=${encodeURIComponent(k)}`
+    }));
+    return links.length ? links : fallback;
+  } catch {
+    return fallback;
+  }
+}
+
 aiRoutes.post("/chat", auth, async (req, res) => {
-  const { message, project_id } = req.body;
+  const { message, project_id, room_type, style_tags, must_haves, colors, notes } = req.body;
   if (!message) return res.status(400).json({ error: "message required" });
 
   let project = null;
@@ -115,7 +155,18 @@ aiRoutes.post("/chat", auth, async (req, res) => {
     ]
   });
 
-  res.json({ reply: data.output_text || "" });
+  let links = [];
+  if (wantsPinterestLinks(message)) {
+    links = await generatePinterestLinks({
+      room_type: room_type || project?.room_type || "living_room",
+      style_tags: style_tags || project?.style_tags || [],
+      must_haves: must_haves || [],
+      colors: colors || [],
+      notes: notes || message
+    });
+  }
+
+  res.json({ reply: data.output_text || "", links });
 });
 
 aiRoutes.post("/plan", auth, async (req, res) => {
@@ -182,37 +233,6 @@ aiRoutes.post("/vision", auth, upload.single("image"), async (req, res) => {
 
 aiRoutes.post("/pinterest", auth, async (req, res) => {
   const { room_type, style_tags, must_haves, colors, notes } = req.body || {};
-
-  const fallback = fallbackPinterest({ room_type, style_tags, must_haves, colors });
-  const data = await openaiResponse({
-    input: [
-      {
-        role: "system",
-        content:
-          "Return JSON only with key `keywords` as array of 10-14 short Pinterest search phrases for room decor and furniture."
-      },
-      {
-        role: "user",
-        content: JSON.stringify({
-          room_type,
-          style_tags: safeArray(style_tags),
-          must_haves: safeArray(must_haves),
-          colors: safeArray(colors),
-          notes: notes || ""
-        })
-      }
-    ]
-  });
-
-  try {
-    const parsed = JSON.parse(data.output_text || "{}");
-    const kws = Array.isArray(parsed.keywords) ? parsed.keywords : [];
-    const links = Array.from(new Set(kws.map((x) => String(x).trim()).filter(Boolean))).slice(0, 14).map((k) => ({
-      keyword: k,
-      url: `https://www.pinterest.com/search/pins/?q=${encodeURIComponent(k)}`
-    }));
-    return res.json({ links: links.length ? links : fallback });
-  } catch {
-    return res.json({ links: fallback });
-  }
+  const links = await generatePinterestLinks({ room_type, style_tags, must_haves, colors, notes });
+  return res.json({ links });
 });

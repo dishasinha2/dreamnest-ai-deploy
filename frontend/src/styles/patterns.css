@@ -1,9 +1,9 @@
 .bg-atmos {
   background:
-    radial-gradient(1100px 800px at 8% 14%, rgba(201,255,58,.24), transparent 62%),
-    radial-gradient(900px 700px at 88% 20%, rgba(255,122,69,.26), transparent 62%),
-    radial-gradient(1000px 700px at 72% 88%, rgba(42,229,192,.22), transparent 60%),
-    radial-gradient(700px 500px at 35% 65%, rgba(94,107,255,.22), transparent 62%),
+    radial-gradient(1100px 800px at 8% 14%, rgba(207,155,116,.25), transparent 62%),
+    radial-gradient(900px 700px at 88% 20%, rgba(137,162,135,.22), transparent 62%),
+    radial-gradient(1000px 700px at 72% 88%, rgba(213,181,113,.20), transparent 60%),
+    radial-gradient(760px 540px at 35% 65%, rgba(255,255,255,.12), transparent 62%),
     linear-gradient(160deg, var(--bg0), var(--bg1), var(--bg2));
   min-height: 100vh;
   color: var(--ink);
@@ -11,11 +11,10 @@
 
 :root[data-theme="light"] .bg-atmos {
   background:
-    radial-gradient(1100px 800px at 100% 82%, rgba(94,107,255,.32), transparent 60%),
-    radial-gradient(1000px 700px at 88% 88%, rgba(255,154,61,.34), transparent 60%),
-    radial-gradient(900px 650px at 90% 82%, rgba(16,199,178,.32), transparent 60%),
-    radial-gradient(800px 600px at 80% 55%, rgba(201,255,58,.28), transparent 60%),
-    radial-gradient(600px 500px at 100% 80%, rgba(255,122,200,.22), transparent 60%),
+    radial-gradient(1100px 800px at 100% 82%, rgba(182,120,78,.26), transparent 60%),
+    radial-gradient(1000px 700px at 88% 88%, rgba(93,122,100,.23), transparent 60%),
+    radial-gradient(900px 650px at 90% 82%, rgba(162,131,63,.20), transparent 60%),
+    radial-gradient(800px 600px at 80% 55%, rgba(255,255,255,.42), transparent 60%),
     linear-gradient(160deg, var(--bg0), var(--bg1), var(--bg2));
 }
 
@@ -25,10 +24,10 @@
   inset:0;
   pointer-events:none;
   background:
-    linear-gradient(to right, rgba(255,255,255,.05) 1px, transparent 1px),
-    linear-gradient(to bottom, rgba(255,255,255,.05) 1px, transparent 1px),
-    radial-gradient(circle at 20% 80%, rgba(255,255,255,.12), transparent 45%);
-  background-size: 72px 72px, 72px 72px, 800px 800px;
-  mask-image: radial-gradient(circle at 40% 20%, black 0%, transparent 70%);
-  opacity:.5;
+    linear-gradient(to right, rgba(255,255,255,.035) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(255,255,255,.035) 1px, transparent 1px),
+    radial-gradient(circle at 18% 78%, rgba(255,255,255,.10), transparent 45%);
+  background-size: 96px 96px, 96px 96px, 900px 900px;
+  mask-image: radial-gradient(circle at 35% 10%, black 0%, transparent 75%);
+  opacity:.4;
 }
