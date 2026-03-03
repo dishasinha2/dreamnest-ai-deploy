@@ -85,6 +85,7 @@ export default function Project() {
     exact_only: false
   });
   const [checkMap, setCheckMap] = useState({});
+  const [timelineMap, setTimelineMap] = useState({});
 
   useEffect(() => {
     if (!token) return;
@@ -100,6 +101,15 @@ export default function Project() {
       setCheckMap(saved && typeof saved === "object" ? saved : {});
     } catch {
       setCheckMap({});
+    }
+  }, [id]);
+
+  useEffect(() => {
+    try {
+      const saved = JSON.parse(localStorage.getItem(`dreamnest_timeline_${id}`) || "{}");
+      setTimelineMap(saved && typeof saved === "object" ? saved : {});
+    } catch {
+      setTimelineMap({});
     }
   }, [id]);
 
@@ -459,6 +469,27 @@ export default function Project() {
     localStorage.setItem(`dreamnest_deliverables_${id}`, JSON.stringify(next));
   }
 
+  function setChecklistAll(value) {
+    const next = {};
+    checklist.forEach((item, idx) => {
+      next[`check_${idx}_${item}`] = value;
+    });
+    setCheckMap(next);
+    localStorage.setItem(`dreamnest_deliverables_${id}`, JSON.stringify(next));
+  }
+
+  function updateTimelineItem(taskId, patch) {
+    const next = {
+      ...timelineMap,
+      [taskId]: {
+        ...(timelineMap[taskId] || {}),
+        ...patch
+      }
+    };
+    setTimelineMap(next);
+    localStorage.setItem(`dreamnest_timeline_${id}`, JSON.stringify(next));
+  }
+
   const latestReq = requirements[0] || {};
   const stylePreview = asArray(project?.style_tags || "modern, warm").slice(0, 3);
   const colorPreview = asArray(latestReq?.colors || "").slice(0, 4);
@@ -497,17 +528,24 @@ export default function Project() {
     { label: "Soft textiles", note: "Curtains / cushions / rugs" }
   ];
   const timeline = [
-    { phase: "Week 1", task: "Measurements + layout freeze", skill: "interior planner" },
-    { phase: "Week 2", task: "Civil/electrical prep", skill: "electrician" },
-    { phase: "Week 3", task: "Paint + ceiling + lighting install", skill: "painter" },
-    { phase: "Week 4", task: "Furniture placement + styling", skill: "carpenter" },
-    { phase: "Week 5", task: "Final walkthrough + snag list", skill: "supervisor" }
+    { id: "w1_layout", phase: "Week 1", task: "Measurements + layout freeze", skill: "interior planner" },
+    { id: "w2_prep", phase: "Week 2", task: "Civil/electrical prep", skill: "electrician" },
+    { id: "w3_paint", phase: "Week 3", task: "Paint + ceiling + lighting install", skill: "painter" },
+    { id: "w4_furniture", phase: "Week 4", task: "Furniture placement + styling", skill: "carpenter" },
+    { id: "w5_handover", phase: "Week 5", task: "Final walkthrough + snag list", skill: "supervisor" }
   ];
   const vendorNames = vendors.map((v) => v.name || "").filter(Boolean);
+  const assignableVendors = [...shortlistedVendors, ...vendors]
+    .filter((v, i, arr) => v?.name && arr.findIndex((x) => x?.id === v.id) === i)
+    .map((v) => v.name);
   const vendorBySkill = (skill) => {
     const hit = vendorNames.find((n) => n.toLowerCase().includes(skill));
     return hit || "Assign vendor";
   };
+  const doneChecklist = checklist.filter((item, idx) => Boolean(checkMap[`check_${idx}_${item}`])).length;
+  const checklistPct = checklist.length ? Math.round((doneChecklist / checklist.length) * 100) : 0;
+  const timelineDone = timeline.filter((t) => (timelineMap[t.id]?.status || "todo") === "done").length;
+  const timelinePct = timeline.length ? Math.round((timelineDone / timeline.length) * 100) : 0;
 
   if (!token) {
     return (
@@ -689,25 +727,44 @@ export default function Project() {
 
       <div className="glass-stack" style={{ marginTop: 22 }}>
         <h3 style={{ fontFamily: "var(--font-display)" }}>Designer Deliverables</h3>
+        <div className="deliverables-summary">
+          <div className="deliverables-kpi">
+            <div className="muted">Checklist completion</div>
+            <div style={{ fontFamily: "var(--font-display)", fontSize: 26 }}>{doneChecklist}/{checklist.length} ({checklistPct}%)</div>
+          </div>
+          <div className="deliverables-kpi">
+            <div className="muted">Execution timeline</div>
+            <div style={{ fontFamily: "var(--font-display)", fontSize: 26 }}>{timelineDone}/{timeline.length} ({timelinePct}%)</div>
+          </div>
+        </div>
         <div className="grid grid-2" style={{ marginTop: 12 }}>
           <div className="card" style={{ boxShadow: "none" }}>
             <div style={{ fontFamily: "var(--font-display)", marginBottom: 8 }}>Floor zoning</div>
-            <div className="grid">
+            <div className="grid zoning-grid">
               {zoning.map((z) => (
-                <div key={z.zone} className="badge" style={{ borderRadius: 12 }}>
-                  <div style={{ fontFamily: "var(--font-display)", textTransform: "capitalize" }}>{z.zone}</div>
+                <div key={z.zone} className="deliverable-item">
+                  <div style={{ fontFamily: "var(--font-display)", textTransform: "capitalize", fontSize: 22 }}>{z.zone}</div>
                   <div className="muted">{z.guidance}</div>
                 </div>
               ))}
             </div>
           </div>
           <div className="card" style={{ boxShadow: "none" }}>
-            <div style={{ fontFamily: "var(--font-display)", marginBottom: 8 }}>Furniture placement checklist</div>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 8, flexWrap: "wrap", marginBottom: 8 }}>
+              <div style={{ fontFamily: "var(--font-display)" }}>Furniture placement checklist</div>
+              <div style={{ display: "flex", gap: 8 }}>
+                <button type="button" className="btn btn-outline" onClick={() => setChecklistAll(true)}>Mark all done</button>
+                <button type="button" className="btn btn-outline" onClick={() => setChecklistAll(false)}>Reset</button>
+              </div>
+            </div>
+            <div className="progress-bar" style={{ marginBottom: 10 }}>
+              <span style={{ width: `${checklistPct}%` }} />
+            </div>
             <div className="grid">
               {checklist.map((item, idx) => {
                 const k = `check_${idx}_${item}`;
                 return (
-                  <label key={k} className="muted" style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                  <label key={k} className="muted deliverable-check-row">
                     <input type="checkbox" checked={Boolean(checkMap[k])} onChange={() => toggleChecklist(k)} />
                     {item}
                   </label>
@@ -719,10 +776,10 @@ export default function Project() {
         <div className="grid grid-2" style={{ marginTop: 12 }}>
           <div className="card" style={{ boxShadow: "none" }}>
             <div style={{ fontFamily: "var(--font-display)", marginBottom: 8 }}>Material board</div>
-            <div className="grid">
+            <div className="grid material-grid">
               {materialBoard.map((m) => (
-                <div key={`${m.label}-${m.note}`} className="badge" style={{ borderRadius: 12 }}>
-                  <div style={{ fontFamily: "var(--font-display)" }}>{m.label}</div>
+                <div key={`${m.label}-${m.note}`} className="deliverable-item">
+                  <div style={{ fontFamily: "var(--font-display)", fontSize: 20 }}>{m.label}</div>
                   <div className="muted">{m.note}</div>
                 </div>
               ))}
@@ -730,11 +787,42 @@ export default function Project() {
           </div>
           <div className="card" style={{ boxShadow: "none" }}>
             <div style={{ fontFamily: "var(--font-display)", marginBottom: 8 }}>Execution timeline (vendor tasks)</div>
+            <div className="progress-bar" style={{ marginBottom: 10 }}>
+              <span style={{ width: `${timelinePct}%` }} />
+            </div>
             <div className="grid">
               {timeline.map((t) => (
-                <div key={t.phase} className="badge" style={{ borderRadius: 12 }}>
-                  <div style={{ fontFamily: "var(--font-display)" }}>{t.phase} - {t.task}</div>
-                  <div className="muted">Owner: {vendorBySkill(t.skill)}</div>
+                <div key={t.id} className="deliverable-item">
+                  <div style={{ fontFamily: "var(--font-display)", fontSize: 21 }}>{t.phase} - {t.task}</div>
+                  <div className="deliverable-controls">
+                    <label className="muted">
+                      Owner
+                      <select
+                        className="select"
+                        value={timelineMap[t.id]?.owner || vendorBySkill(t.skill)}
+                        onChange={(e) => updateTimelineItem(t.id, { owner: e.target.value })}
+                      >
+                        {[vendorBySkill(t.skill), ...assignableVendors].filter((v, i, arr) => v && arr.indexOf(v) === i).map((v) => (
+                          <option key={`${t.id}-${v}`} value={v}>{v}</option>
+                        ))}
+                      </select>
+                    </label>
+                    <label className="muted">
+                      Status
+                      <select
+                        className="select"
+                        value={timelineMap[t.id]?.status || "todo"}
+                        onChange={(e) => updateTimelineItem(t.id, { status: e.target.value })}
+                      >
+                        <option value="todo">To do</option>
+                        <option value="in_progress">In progress</option>
+                        <option value="done">Done</option>
+                      </select>
+                    </label>
+                  </div>
+                  <div className="muted">
+                    Current: {(timelineMap[t.id]?.status || "todo").replace("_", " ")} | Owner: {timelineMap[t.id]?.owner || vendorBySkill(t.skill)}
+                  </div>
                 </div>
               ))}
             </div>

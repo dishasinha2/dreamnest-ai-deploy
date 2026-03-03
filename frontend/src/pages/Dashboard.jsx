@@ -3,6 +3,58 @@ import { useNavigate } from "react-router-dom";
 import { AIAPI, ProjectAPI, AuthAPI } from "../api/endpoints";
 import { useAuth } from "../hooks/useAuth";
 
+const IMAGE_FALLBACK = "https://images.unsplash.com/photo-1493663284031-b7e3aefcae8e?q=80&w=1200&auto=format&fit=crop";
+
+const ROOM_OPTIONS = [
+  { id: "living_room", label: "Living Room", img: "https://images.unsplash.com/photo-1493663284031-b7e3aefcae8e?q=80&w=1200&auto=format&fit=crop" },
+  { id: "bedroom", label: "Bedroom", img: "https://images.unsplash.com/photo-1505693416388-ac5ce068fe85?q=80&w=1200&auto=format&fit=crop" },
+  { id: "kitchen", label: "Kitchen", img: "https://images.unsplash.com/photo-1556912173-3bb406ef7e77?q=80&w=1200&auto=format&fit=crop" },
+  { id: "office", label: "Office", img: "https://images.unsplash.com/photo-1524758631624-e2822e304c36?q=80&w=1200&auto=format&fit=crop" },
+  { id: "kids_room", label: "Kids Room", img: "https://images.unsplash.com/photo-1505693314120-0d443867891c?q=80&w=1200&auto=format&fit=crop" },
+  { id: "studio", label: "Studio", img: "https://images.unsplash.com/photo-1501876725168-00c445821c9e?q=80&w=1200&auto=format&fit=crop" },
+  { id: "dining_room", label: "Dining", img: "https://images.unsplash.com/photo-1617104678098-de229db51175?q=80&w=1200&auto=format&fit=crop" },
+  { id: "bathroom", label: "Bathroom", img: "https://images.unsplash.com/photo-1620626011761-996317b8d101?q=80&w=1200&auto=format&fit=crop" },
+  { id: "balcony", label: "Balcony", img: "https://images.unsplash.com/photo-1617104678018-df7f2ca8f5a2?q=80&w=1200&auto=format&fit=crop" },
+  { id: "entryway", label: "Entryway", img: "https://images.unsplash.com/photo-1484154218962-a197022b5858?q=80&w=1200&auto=format&fit=crop" },
+  { id: "guest_room", label: "Guest Room", img: "https://images.unsplash.com/photo-1505693314120-0d443867891c?q=80&w=1200&auto=format&fit=crop" },
+  { id: "pooja_room", label: "Pooja Room", img: "https://images.unsplash.com/photo-1616594039964-3ad2f516f4c5?q=80&w=1200&auto=format&fit=crop" },
+  { id: "dressing_room", label: "Dressing", img: "https://images.unsplash.com/photo-1616486029423-aaa4789e8c9a?q=80&w=1200&auto=format&fit=crop" },
+  { id: "laundry", label: "Laundry", img: "https://images.unsplash.com/photo-1626806819282-2c1dc01a5e0c?q=80&w=1200&auto=format&fit=crop" },
+  { id: "home_theatre", label: "Home Theatre", img: "https://images.unsplash.com/photo-1585647347483-22b66260dfff?q=80&w=1200&auto=format&fit=crop" },
+  { id: "terrace", label: "Terrace", img: "https://images.unsplash.com/photo-1600607687644-c7f34b5f11c8?q=80&w=1200&auto=format&fit=crop" },
+  { id: "kids_study", label: "Kids Study", img: "https://images.unsplash.com/photo-1600210492486-724fe5c67fb0?q=80&w=1200&auto=format&fit=crop" },
+  { id: "walkin_closet", label: "Walk-in Closet", img: "https://images.unsplash.com/photo-1556020685-ae41abfc9365?q=80&w=1200&auto=format&fit=crop" },
+  { id: "gaming_room", label: "Gaming Room", img: "https://images.unsplash.com/photo-1593305841991-05c297ba4575?q=80&w=1200&auto=format&fit=crop" }
+];
+
+const STYLE_OPTIONS = [
+  { id: "modern", label: "Modern", img: "https://images.unsplash.com/photo-1493663284031-b7e3aefcae8e?q=80&w=1200&auto=format&fit=crop" },
+  { id: "warm", label: "Warm", img: "https://images.unsplash.com/photo-1505691938895-1758d7feb511?q=80&w=1200&auto=format&fit=crop" },
+  { id: "minimal", label: "Minimal", img: "https://images.unsplash.com/photo-1600210492493-0946911123ea?q=80&w=1200&auto=format&fit=crop" },
+  { id: "boho", label: "Boho", img: "https://images.unsplash.com/photo-1513694203232-719a280e022f?q=80&w=1200&auto=format&fit=crop" },
+  { id: "industrial", label: "Industrial", img: "https://images.unsplash.com/photo-1524758631624-e2822e304c36?q=80&w=1200&auto=format&fit=crop" },
+  { id: "classic", label: "Classic", img: "https://images.unsplash.com/photo-1505691723518-36a5ac3be353?q=80&w=1200&auto=format&fit=crop" },
+  { id: "scandinavian", label: "Scandi", img: "https://images.unsplash.com/photo-1616486338812-3dadae4b4ace?q=80&w=1200&auto=format&fit=crop" },
+  { id: "luxury", label: "Luxury", img: "https://images.unsplash.com/photo-1616594039964-3ad2f516f4c5?q=80&w=1200&auto=format&fit=crop" },
+  { id: "coastal", label: "Coastal", img: "https://images.unsplash.com/photo-1600566752355-35792bedcfea?q=80&w=1200&auto=format&fit=crop" },
+  { id: "rustic", label: "Rustic", img: "https://images.unsplash.com/photo-1615529182904-14819c35db37?q=80&w=1200&auto=format&fit=crop" },
+  { id: "japandi", label: "Japandi", img: "https://images.unsplash.com/photo-1616486029423-aaa4789e8c9a?q=80&w=1200&auto=format&fit=crop" },
+  { id: "traditional", label: "Traditional", img: "https://images.unsplash.com/photo-1505691723518-36a5ac3be353?q=80&w=1200&auto=format&fit=crop" },
+  { id: "contemporary", label: "Contemporary", img: "https://images.unsplash.com/photo-1617104551722-3b2d51366464?q=80&w=1200&auto=format&fit=crop" },
+  { id: "mid_century", label: "Mid-century", img: "https://images.unsplash.com/photo-1617104551722-3b2d51366464?q=80&w=1200&auto=format&fit=crop" },
+  { id: "wabi_sabi", label: "Wabi-sabi", img: "https://images.unsplash.com/photo-1615875605825-5eb9bb5d52cb?q=80&w=1200&auto=format&fit=crop" },
+  { id: "mediterranean", label: "Mediterranean", img: "https://images.unsplash.com/photo-1513694203232-719a280e022f?q=80&w=1200&auto=format&fit=crop" },
+  { id: "maximalist", label: "Maximalist", img: "https://images.unsplash.com/photo-1493666438817-866a91353ca9?q=80&w=1200&auto=format&fit=crop" },
+  { id: "minimal_luxe", label: "Minimal Luxe", img: "https://images.unsplash.com/photo-1600210492493-0946911123ea?q=80&w=1200&auto=format&fit=crop" }
+];
+
+function setImageFallback(e) {
+  const el = e.currentTarget;
+  if (el.dataset.fallbackApplied === "1") return;
+  el.dataset.fallbackApplied = "1";
+  el.src = IMAGE_FALLBACK;
+}
+
 export default function Dashboard() {
   const nav = useNavigate();
   const { token, setToken } = useAuth();
@@ -327,27 +379,7 @@ export default function Dashboard() {
                 <div className="glass-panel">
                   <div className="panel-title">Select Room Type</div>
                   <div className="choice-grid">
-                    {[
-                      { id: "living_room", label: "Living Room", img: "https://images.unsplash.com/photo-1505691938895-1758d7feb511?q=80&w=800&auto=format&fit=crop" },
-                      { id: "bedroom", label: "Bedroom", img: "https://images.unsplash.com/photo-1502005097973-6a7082348e28?q=80&w=800&auto=format&fit=crop" },
-                      { id: "kitchen", label: "Kitchen", img: "https://images.unsplash.com/photo-1556912173-3bb406ef7e77?q=80&w=800&auto=format&fit=crop" },
-                      { id: "office", label: "Office", img: "https://images.unsplash.com/photo-1524758631624-e2822e304c36?q=80&w=800&auto=format&fit=crop" },
-                      { id: "kids_room", label: "Kids Room", img: "https://images.unsplash.com/photo-1519710164239-da123dc03ef4?q=80&w=800&auto=format&fit=crop" },
-                      { id: "studio", label: "Studio", img: "https://images.unsplash.com/photo-1493663284031-b7e3aefcae8e?q=80&w=800&auto=format&fit=crop" },
-                    { id: "dining_room", label: "Dining", img: "https://images.unsplash.com/photo-1519710164239-da123dc03ef4?q=80&w=800&auto=format&fit=crop" },
-                    { id: "bathroom", label: "Bathroom", img: "https://images.unsplash.com/photo-1505691938895-1758d7feb511?q=80&w=800&auto=format&fit=crop" },
-                    { id: "balcony", label: "Balcony", img: "https://images.unsplash.com/photo-1502005097973-6a7082348e28?q=80&w=800&auto=format&fit=crop" },
-                    { id: "entryway", label: "Entryway", img: "https://images.unsplash.com/photo-1493663284031-b7e3aefcae8e?q=80&w=800&auto=format&fit=crop" },
-                    { id: "guest_room", label: "Guest Room", img: "https://images.unsplash.com/photo-1505691938895-1758d7feb511?q=80&w=800&auto=format&fit=crop" },
-                    { id: "pooja_room", label: "Pooja Room", img: "https://images.unsplash.com/photo-1502005097973-6a7082348e28?q=80&w=800&auto=format&fit=crop" },
-                    { id: "dressing_room", label: "Dressing", img: "https://images.unsplash.com/photo-1493663284031-b7e3aefcae8e?q=80&w=800&auto=format&fit=crop" },
-                    { id: "laundry", label: "Laundry", img: "https://images.unsplash.com/photo-1556912173-3bb406ef7e77?q=80&w=800&auto=format&fit=crop" },
-                    { id: "home_theatre", label: "Home Theatre", img: "https://images.unsplash.com/photo-1489515217757-5fd1be406fef?q=80&w=800&auto=format&fit=crop" },
-                    { id: "terrace", label: "Terrace", img: "https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?q=80&w=800&auto=format&fit=crop" },
-                    { id: "kids_study", label: "Kids Study", img: "https://images.unsplash.com/photo-1600210492486-724fe5c67fb0?q=80&w=800&auto=format&fit=crop" },
-                    { id: "walkin_closet", label: "Walk-in Closet", img: "https://images.unsplash.com/photo-1556020685-ae41abfc9365?q=80&w=800&auto=format&fit=crop" },
-                    { id: "gaming_room", label: "Gaming Room", img: "https://images.unsplash.com/photo-1616588589676-62b3bd0f9e13?q=80&w=800&auto=format&fit=crop" }
-                    ].map((r) => {
+                    {ROOM_OPTIONS.map((r) => {
                       const roomSet = new Set((form.room_type || "").split(",").map(s => s.trim()).filter(Boolean));
                       const selected = roomSet.has(r.id);
                       return (
@@ -359,7 +391,7 @@ export default function Dashboard() {
                           setForm({ ...form, room_type: Array.from(roomSet).join(",") });
                         }}
                       >
-                        <img src={r.img} alt={r.label} />
+                        <img src={r.img} alt={r.label} loading="lazy" onError={setImageFallback} />
                         <div className="choice-label">{r.label}</div>
                       </div>
                     )})}
@@ -386,26 +418,7 @@ export default function Dashboard() {
                   <div className="muted">Modern, warm, minimal, boho, etc.</div>
                 </div>
                 <div className="choice-grid">
-                  {[
-                    { id: "modern", label: "Modern", img: "https://images.unsplash.com/photo-1493663284031-b7e3aefcae8e?q=80&w=800&auto=format&fit=crop" },
-                    { id: "warm", label: "Warm", img: "https://images.unsplash.com/photo-1505691938895-1758d7feb511?q=80&w=800&auto=format&fit=crop" },
-                    { id: "minimal", label: "Minimal", img: "https://images.unsplash.com/photo-1502005097973-6a7082348e28?q=80&w=800&auto=format&fit=crop" },
-                    { id: "boho", label: "Boho", img: "https://images.unsplash.com/photo-1519710164239-da123dc03ef4?q=80&w=800&auto=format&fit=crop" },
-                    { id: "industrial", label: "Industrial", img: "https://images.unsplash.com/photo-1524758631624-e2822e304c36?q=80&w=800&auto=format&fit=crop" },
-                    { id: "classic", label: "Classic", img: "https://images.unsplash.com/photo-1449844908441-8829872d2607?q=80&w=800&auto=format&fit=crop" },
-                    { id: "scandinavian", label: "Scandi", img: "https://images.unsplash.com/photo-1484101403633-562f891dc89a?q=80&w=800&auto=format&fit=crop" },
-                    { id: "luxury", label: "Luxury", img: "https://images.unsplash.com/photo-1505691938895-1758d7feb511?q=80&w=800&auto=format&fit=crop" },
-                    { id: "coastal", label: "Coastal", img: "https://images.unsplash.com/photo-1502005097973-6a7082348e28?q=80&w=800&auto=format&fit=crop" },
-                    { id: "rustic", label: "Rustic", img: "https://images.unsplash.com/photo-1519710164239-da123dc03ef4?q=80&w=800&auto=format&fit=crop" },
-                    { id: "japandi", label: "Japandi", img: "https://images.unsplash.com/photo-1484101403633-562f891dc89a?q=80&w=800&auto=format&fit=crop" },
-                    { id: "traditional", label: "Traditional", img: "https://images.unsplash.com/photo-1449844908441-8829872d2607?q=80&w=800&auto=format&fit=crop" },
-                    { id: "contemporary", label: "Contemporary", img: "https://images.unsplash.com/photo-1600607687644-c7f34b5f11c8?q=80&w=800&auto=format&fit=crop" },
-                    { id: "mid_century", label: "Mid-century", img: "https://images.unsplash.com/photo-1617104551722-3b2d51366464?q=80&w=800&auto=format&fit=crop" },
-                    { id: "wabi_sabi", label: "Wabi-sabi", img: "https://images.unsplash.com/photo-1615875605825-5eb9bb5d52cb?q=80&w=800&auto=format&fit=crop" },
-                    { id: "mediterranean", label: "Mediterranean", img: "https://images.unsplash.com/photo-1513694203232-719a280e022f?q=80&w=800&auto=format&fit=crop" },
-                    { id: "maximalist", label: "Maximalist", img: "https://images.unsplash.com/photo-1493666438817-866a91353ca9?q=80&w=800&auto=format&fit=crop" },
-                    { id: "minimal_luxe", label: "Minimal Luxe", img: "https://images.unsplash.com/photo-1600210492493-0946911123ea?q=80&w=800&auto=format&fit=crop" }
-                  ].map((r) => {
+                  {STYLE_OPTIONS.map((r) => {
                     const tags = new Set((form.style_tags || "").split(",").map(s => s.trim()).filter(Boolean));
                     const selected = tags.has(r.id);
                     return (
@@ -417,7 +430,7 @@ export default function Dashboard() {
                           setForm({ ...form, style_tags: Array.from(tags).join(",") });
                         }}
                       >
-                        <img src={r.img} alt={r.label} />
+                        <img src={r.img} alt={r.label} loading="lazy" onError={setImageFallback} />
                         <div className="choice-label">{r.label}</div>
                       </div>
                     );
