@@ -36,7 +36,7 @@ function mapResult(item, city, queryLabel) {
   };
 }
 
-async function fetchMapsVendors(city, queryLabel, limit = 14) {
+async function fetchMapsVendors(city, queryLabel, limit = 20) {
   const apiKey = process.env.SERPAPI_KEY;
   if (!apiKey || !city) return [];
 
@@ -63,13 +63,15 @@ export async function searchExternalVendorsByCity(city) {
   const queries = [
     "interior designer",
     "home renovation contractor",
-    "carpenter"
+    "carpenter",
+    "modular kitchen designer",
+    "false ceiling contractor"
   ];
 
   const all = [];
   for (const q of queries) {
     try {
-      const rows = await fetchMapsVendors(normalizedCity, q, 10);
+      const rows = await fetchMapsVendors(normalizedCity, q, 20);
       all.push(...rows);
     } catch {
       // Ignore upstream failures and return available results.
@@ -82,6 +84,5 @@ export async function searchExternalVendorsByCity(city) {
     if (!dedup.has(key)) dedup.set(key, v);
   }
 
-  return Array.from(dedup.values()).slice(0, 24);
+  return Array.from(dedup.values()).slice(0, 60);
 }
-

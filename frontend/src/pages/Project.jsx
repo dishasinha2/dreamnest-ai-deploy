@@ -130,9 +130,9 @@ export default function Project() {
   async function loadVendors(city) {
     setVendorNotice("");
     try {
-      const local = await VendorsAPI.list({ city });
+      const local = await VendorsAPI.list({ city, include_external: "1" });
       setVendors(local);
-      if (!local.length) setVendorNotice(`No vendors found for ${city}. Add vendors in this city from vendor form/admin.`);
+      if (!local.length) setVendorNotice(`No vendors found for ${city} right now.`);
     } catch {
       setVendors([]);
       setVendorNotice("Unable to load vendors right now.");
@@ -427,6 +427,16 @@ export default function Project() {
     const t = String(url).trim();
     if (t.startsWith("http://") || t.startsWith("https://")) return t;
     return `https://${t}`;
+  }
+
+  function toPhoneUrl(raw) {
+    const digits = String(raw || "").replace(/[^\d+]/g, "");
+    return digits ? `tel:${digits}` : "";
+  }
+
+  function toWhatsappUrl(raw) {
+    const digits = String(raw || "").replace(/[^\d]/g, "");
+    return digits ? `https://wa.me/${digits}` : "";
   }
 
   function storeNameFromUrl(url) {
@@ -945,9 +955,35 @@ export default function Project() {
                 <div style={{ fontFamily: "var(--font-display)" }}>{v.name}</div>
                 <div className="muted">{v.city} - {v.years_exp} yrs</div>
                 <div className="muted">Rating {v.avg_rating || "-"} ({v.review_count || 0})</div>
+                {v.external && <div className="badge">Live vendor</div>}
                 <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-                  <button className="btn btn-outline" onClick={() => viewVendor(v.id)}>Mark viewed</button>
-                  <button className="btn" onClick={() => shortlistVendor(v.id)}>Shortlist vendor</button>
+                  {v.external ? (
+                    <>
+                      {(v.phone || v.whatsapp) && (
+                        <a className="btn btn-outline" href={toPhoneUrl(v.phone || v.whatsapp)}>
+                          Call
+                        </a>
+                      )}
+                      {(v.whatsapp || v.phone) && (
+                        <a className="btn btn-outline" href={toWhatsappUrl(v.whatsapp || v.phone)} target="_blank" rel="noreferrer">
+                          WhatsApp
+                        </a>
+                      )}
+                      <a
+                        className="btn btn-outline"
+                        href={normalizeUrl(v.maps_url || `https://www.google.com/maps/search/${encodeURIComponent(`${v.name} ${v.city || ""}`)}`)}
+                        target="_blank"
+                        rel="noreferrer"
+                      >
+                        Open on maps
+                      </a>
+                    </>
+                  ) : (
+                    <>
+                      <button className="btn btn-outline" onClick={() => viewVendor(v.id)}>Mark viewed</button>
+                      <button className="btn" onClick={() => shortlistVendor(v.id)}>Shortlist vendor</button>
+                    </>
+                  )}
                 </div>
                 {v.website && (
                   <a className="btn btn-outline" href={normalizeUrl(v.website)} target="_blank" rel="noreferrer">
