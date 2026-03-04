@@ -4,7 +4,8 @@ body {
   font-family: var(--font-body);
   background: var(--bg0);
   color: var(--ink);
-  letter-spacing: .1px;
+  letter-spacing: .08px;
+  line-height: 1.45;
 }
 body.chat-open .container {
   padding-right: 20px;
@@ -19,11 +20,11 @@ body.chat-open::after {
   pointer-events: none;
 }
 a { color: inherit; text-decoration: none; }
-button { font-family: var(--font-display); }
+button { font-family: var(--font-body); }
 img { display: block; }
 pre { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace; }
 
-.container { max-width: 1120px; margin: 0 auto; padding: 48px 20px; }
+.container { max-width: 1220px; margin: 0 auto; padding: 40px 22px; }
 .device-toggle {
   position: fixed;
   right: 20px;
@@ -85,48 +86,52 @@ pre { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liber
 .card {
   background: var(--card);
   border: 1px solid var(--stroke);
-  border-radius: var(--r-lg);
+  border-radius: 18px;
   padding: 20px;
   box-shadow: var(--shadow);
-  backdrop-filter: blur(6px);
+  backdrop-filter: blur(8px);
   transition: transform .2s ease, box-shadow .2s ease, border-color .2s ease;
 }
 .card:hover {
-  transform: translateY(-2px);
-  border-color: rgba(255,255,255,.25);
-  box-shadow: 0 28px 80px rgba(0,0,0,.55);
+  transform: translateY(-1px);
+  border-color: rgba(255,255,255,.2);
+  box-shadow: 0 24px 56px rgba(0,0,0,.38);
 }
 .grid { display: grid; gap: 18px; }
 .grid-2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 .grid-3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
-.badge { font-family: var(--font-display); font-size: 12px; padding: 6px 10px; border-radius: 999px; border: 1px solid var(--stroke); }
+.badge { font-family: var(--font-body); font-weight: 600; font-size: 12px; padding: 6px 10px; border-radius: 999px; border: 1px solid var(--stroke); }
 .muted { color: var(--muted); }
 
 .btn {
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  padding: 11px 16px;
+  padding: 10px 15px;
   border-radius: 12px;
   border: 1px solid transparent;
-  background: var(--accent);
+  background: linear-gradient(145deg, var(--accent), color-mix(in srgb, var(--accent) 82%, #000 18%));
   color: #0B0F14;
-  font-weight: 600;
+  font-family: var(--font-body);
+  font-weight: 700;
+  letter-spacing: .18px;
   cursor: pointer;
-  transition: transform .15s ease, box-shadow .15s ease;
+  box-shadow: 0 10px 24px rgba(0,0,0,.22);
+  transition: transform .15s ease, box-shadow .15s ease, filter .15s ease;
 }
-.btn:hover { transform: translateY(-1px); }
+.btn:hover { transform: translateY(-1px); filter: brightness(1.02); }
 .btn-outline {
-  background: transparent;
+  background: rgba(255,255,255,.02);
   color: var(--ink);
   border: 1px solid var(--stroke);
+  box-shadow: none;
 }
 .btn-accent2 {
-  background: var(--accent2);
+  background: linear-gradient(145deg, var(--accent2), color-mix(in srgb, var(--accent2) 82%, #000 18%));
   color: #0B0F14;
 }
 .btn-accent3 {
-  background: var(--accent3);
+  background: linear-gradient(145deg, var(--accent3), color-mix(in srgb, var(--accent3) 82%, #000 18%));
   color: #04140F;
 }
 
@@ -135,8 +140,15 @@ pre { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liber
   padding: 12px 14px;
   border-radius: 12px;
   border: 1px solid var(--stroke);
-  background: rgba(255,255,255,.04);
+  background: rgba(255,255,255,.035);
   color: var(--ink);
+  transition: border-color .15s ease, box-shadow .15s ease, background .15s ease;
+}
+.input:focus, .select:focus, .textarea:focus {
+  outline: none;
+  border-color: color-mix(in srgb, var(--accent2) 58%, #fff 42%);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent2) 24%, transparent 76%);
+  background: rgba(255,255,255,.05);
 }
 .select {
   appearance: none;
@@ -168,7 +180,8 @@ pre { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liber
   gap: 10px;
   font-family: var(--font-display);
   letter-spacing: .5px;
-  font-size: 34px;
+  font-size: 28px;
+  line-height: 1;
 }
 .nav-brand::before {
   content: "";
@@ -183,7 +196,7 @@ pre { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liber
   flex: 0 0 auto;
 }
 .nav-sub {
-  font-size: 14px;
+  font-size: 12px;
   color: var(--muted);
 }
 .nav-actions { display: flex; gap: 10px; align-items: center; }
@@ -209,7 +222,7 @@ pre { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liber
   border-radius: 12px;
   display: grid;
   place-items: center;
-  background: linear-gradient(135deg, rgba(198,255,46,.35), rgba(255,106,61,.35));
+  background: linear-gradient(135deg, color-mix(in srgb, var(--accent) 44%, transparent), color-mix(in srgb, var(--accent2) 44%, transparent));
   border: 1px solid var(--stroke);
   font-family: var(--font-display);
 }
@@ -221,7 +234,7 @@ pre { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liber
   width: 56px;
   height: 56px;
   border-radius: 18px;
-  background: var(--accent);
+  background: linear-gradient(145deg, var(--accent), color-mix(in srgb, var(--accent) 82%, #000 18%));
   border: 1px solid transparent;
   display: grid;
   place-items: center;
@@ -246,7 +259,7 @@ pre { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liber
   position: absolute;
   top: -6px;
   right: -6px;
-  background: var(--accent2);
+  background: var(--accent3);
   color: #0B0F14;
   width: 18px;
   height: 18px;
@@ -261,10 +274,10 @@ pre { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liber
   position: fixed;
   right: 20px;
   top: 90px;
-  width: 320px;
+  width: 360px;
   height: calc(100vh - 140px);
   border-radius: 18px;
-  background: rgba(255,255,255,.07);
+  background: rgba(255,255,255,.08);
   border: 1px solid var(--stroke);
   box-shadow: var(--shadow);
   padding: 14px;
@@ -318,7 +331,7 @@ pre { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liber
   inset: -20px -10px auto auto;
   width: 220px;
   height: 220px;
-  background: radial-gradient(circle, rgba(198,255,46,.25), transparent 60%);
+  background: radial-gradient(circle, color-mix(in srgb, var(--accent) 35%, transparent), transparent 60%);
   filter: blur(6px);
   opacity: .8;
   animation: sparkPulse 3.2s ease-in-out infinite;
@@ -332,7 +345,7 @@ pre { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liber
 .splash {
   position: fixed;
   inset: 0;
-  background: linear-gradient(130deg, rgba(12,11,22,.98), rgba(26,18,48,.98));
+  background: linear-gradient(130deg, color-mix(in srgb, var(--bg0) 95%, #000 5%), color-mix(in srgb, var(--bg1) 95%, #000 5%));
   display: grid;
   place-items: center;
   z-index: 999;
@@ -342,7 +355,7 @@ pre { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liber
   font-size: 56px;
   letter-spacing: 1px;
   color: var(--accent);
-  text-shadow: 0 0 30px rgba(198,255,46,.35);
+  text-shadow: 0 0 24px color-mix(in srgb, var(--accent) 32%, transparent);
 }
 .intro-grid {
   display: grid;
@@ -483,7 +496,7 @@ pre { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liber
   inset: -40px -30px auto auto;
   width: 260px;
   height: 260px;
-  background: conic-gradient(from 120deg, rgba(198,255,46,.18), rgba(255,106,61,.18), rgba(32,217,176,.18));
+  background: conic-gradient(from 120deg, color-mix(in srgb, var(--accent) 22%, transparent), color-mix(in srgb, var(--accent2) 22%, transparent), color-mix(in srgb, var(--accent3) 22%, transparent));
   filter: blur(18px);
   opacity: .8;
   animation: sparkPulse 4s ease-in-out infinite;
@@ -568,7 +581,7 @@ pre { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liber
 }
 
 .soft-glow {
-  box-shadow: 0 0 40px rgba(198,255,46,.2);
+  box-shadow: 0 0 34px color-mix(in srgb, var(--accent) 22%, transparent);
 }
 
 .card-grid {
@@ -739,10 +752,11 @@ pre { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liber
 }
 .choice-label {
   margin-top: 8px;
-  font-family: var(--font-display);
-  font-size: 20px;
+  font-family: var(--font-body);
+  font-size: 14px;
+  font-weight: 700;
   text-align: center;
-  line-height: 1;
+  line-height: 1.2;
 }
 .choice-card.multi {
   border-color: var(--accent2);
@@ -785,8 +799,8 @@ pre { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liber
   max-width: 85%;
 }
 .chat-bubble.user {
-  background: rgba(201,255,58,.15);
-  border-color: rgba(201,255,58,.35);
+  background: color-mix(in srgb, var(--accent3) 22%, transparent);
+  border-color: color-mix(in srgb, var(--accent3) 38%, transparent);
   justify-self: end;
   text-align: right;
 }
@@ -903,7 +917,7 @@ pre { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liber
   border: 1px solid var(--stroke);
   border-radius: 14px;
   padding: 14px;
-  background: linear-gradient(140deg, rgba(198,255,46,.08), rgba(255,106,61,.08));
+  background: linear-gradient(140deg, color-mix(in srgb, var(--accent) 18%, transparent), color-mix(in srgb, var(--accent2) 18%, transparent));
 }
 .about-callout-title {
   font-family: var(--font-display);
@@ -1187,7 +1201,7 @@ pre { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liber
 .studio-service h3 {
   margin: 0 0 8px;
   font-family: var(--font-display);
-  font-size: 27px;
+  font-size: 24px;
 }
 .studio-process {
   display: grid;
@@ -1280,7 +1294,7 @@ pre { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liber
 }
 .studio-mini-metric strong {
   font-family: var(--font-display);
-  font-size: 24px;
+  font-size: 22px;
   line-height: .9;
 }
 
