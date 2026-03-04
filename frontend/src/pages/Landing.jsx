@@ -31,7 +31,9 @@ export default function Landing() {
               className="btn btn-outline"
               onClick={() => {
                 const root = document.documentElement;
-                root.dataset.theme = root.dataset.theme === "light" ? "dark" : "light";
+                const next = root.dataset.theme === "light" ? "dark" : "light";
+                root.dataset.theme = next;
+                localStorage.setItem("dreamnest_theme", next);
               }}
             >
               Theme

@@ -37,6 +37,19 @@ export default function App() {
     localStorage.setItem("dreamnest_device_mode", preferredDeviceMode);
   }, [preferredDeviceMode, isNarrowViewport]);
 
+  useEffect(() => {
+    const root = document.documentElement;
+    const savedTheme = localStorage.getItem("dreamnest_theme");
+    if (savedTheme === "light" || savedTheme === "dark") {
+      root.dataset.theme = savedTheme;
+      return;
+    }
+    const prefersLight = typeof window !== "undefined" && window.matchMedia && window.matchMedia("(prefers-color-scheme: light)").matches;
+    const nextTheme = prefersLight ? "light" : "dark";
+    root.dataset.theme = nextTheme;
+    localStorage.setItem("dreamnest_theme", nextTheme);
+  }, []);
+
   return (
     <BrowserRouter>
       <div className="bg-atmos grid-veil">

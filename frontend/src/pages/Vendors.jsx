@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { VendorsAPI } from "../api/endpoints";
 import { useAuth } from "../hooks/useAuth";
 
@@ -10,6 +10,9 @@ export default function Vendors() {
   const [vendors, setVendors] = useState([]);
   const [error, setError] = useState("");
   const [notice, setNotice] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
+  const [serviceFilter, setServiceFilter] = useState("all");
+  const [sortBy, setSortBy] = useState("rating_desc");
   const [step, setStep] = useState(0);
   const [previews, setPreviews] = useState([]);
   const [apply, setApply] = useState({
@@ -25,10 +28,22 @@ export default function Vendors() {
     files: []
   });
 
+  async function loadVendorList(nextCity) {
+    setIsLoading(true);
+    setError("");
+    try {
+      const rows = await VendorsAPI.list(nextCity ? { city: nextCity, include_external: "1" } : {});
+      setVendors(Array.isArray(rows) ? rows : []);
+    } catch (e) {
+      setError(String(e.message || e));
+      setVendors([]);
+    } finally {
+      setIsLoading(false);
+    }
+  }
+
   useEffect(() => {
-    VendorsAPI.list(city ? { city, include_external: "1" } : {})
-      .then(setVendors)
-      .catch((e) => setError(String(e.message || e)));
+    loadVendorList(city);
   }, [city]);
 
   function normalizeUrl(url) {
@@ -38,6 +53,32 @@ export default function Vendors() {
     if (t.startsWith("http://") || t.startsWith("https://")) return t;
     return `https://${t}`;
   }
+
+  function toPhoneUrl(raw) {
+    const digits = String(raw || "").replace(/[^\d+]/g, "");
+    return digits ? `tel:${digits}` : "";
+  }
+
+  function toWhatsappUrl(raw) {
+    const digits = String(raw || "").replace(/[^\d]/g, "");
+    return digits ? `https://wa.me/${digits}` : "";
+  }
+
+  const visibleVendors = useMemo(() => {
+    const normalizedService = String(serviceFilter || "all").toLowerCase();
+    const list = (vendors || []).filter((v) => {
+      if (normalizedService === "all") return true;
+      const services = Array.isArray(v.service_types) ? v.service_types : [];
+      return services.some((s) => String(s || "").toLowerCase().includes(normalizedService));
+    });
+
+    const sorted = [...list];
+    if (sortBy === "rating_desc") sorted.sort((a, b) => Number(b.avg_rating || 0) - Number(a.avg_rating || 0));
+    if (sortBy === "reviews_desc") sorted.sort((a, b) => Number(b.review_count || 0) - Number(a.review_count || 0));
+    if (sortBy === "experience_desc") sorted.sort((a, b) => Number(b.years_exp || 0) - Number(a.years_exp || 0));
+    if (sortBy === "name_asc") sorted.sort((a, b) => String(a.name || "").localeCompare(String(b.name || "")));
+    return sorted;
+  }, [vendors, serviceFilter, sortBy]);
 
   async function submitApply(e) {
     e.preventDefault();
@@ -68,8 +109,7 @@ export default function Vendors() {
       setStep(0);
       setNotice("Application submitted. We will review it soon.");
       if (city) {
-        const next = await VendorsAPI.list({ city, include_external: "1" });
-        setVendors(next);
+        await loadVendorList(city);
       }
     } catch (err) {
       setError(String(err.message || err));
@@ -88,7 +128,9 @@ export default function Vendors() {
             className="btn btn-outline"
             onClick={() => {
               const root = document.documentElement;
-              root.dataset.theme = root.dataset.theme === "light" ? "dark" : "light";
+              const next = root.dataset.theme === "light" ? "dark" : "light";
+              root.dataset.theme = next;
+              localStorage.setItem("dreamnest_theme", next);
             }}
           >
             Theme
@@ -116,20 +158,75 @@ export default function Vendors() {
       <div className="grid grid-2" style={{ marginTop: 18 }}>
         <div className="card">
           <h3 style={{ fontFamily: "var(--font-display)" }}>Local vendors</h3>
-          <input
-            className="input"
-            placeholder="Filter by city"
-            value={city}
-            onChange={(e) => setCity(e.target.value)}
-          />
+          <div className="grid" style={{ gridTemplateColumns: "1.5fr auto 1fr 1fr", gap: 8 }}>
+            <input
+              className="input"
+              placeholder="Filter by city"
+              value={city}
+              onChange={(e) => setCity(e.target.value)}
+            />
+            <button
+              type="button"
+              className="btn btn-outline"
+              onClick={() => {
+                if (!navigator.geolocation) return;
+                navigator.geolocation.getCurrentPosition(async (pos) => {
+                  const { latitude, longitude } = pos.coords;
+                  try {
+                    const r = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}`);
+                    const data = await r.json();
+                    const cityName =
+                      data.address?.city ||
+                      data.address?.town ||
+                      data.address?.village ||
+                      data.address?.state ||
+                      "";
+                    if (cityName) setCity(cityName);
+                  } catch {}
+                });
+              }}
+            >
+              Detect
+            </button>
+            <select className="select" value={serviceFilter} onChange={(e) => setServiceFilter(e.target.value)}>
+              <option value="all">All services</option>
+              <option value="interior">Interior</option>
+              <option value="renovation">Renovation</option>
+              <option value="carpentry">Carpentry</option>
+              <option value="electrical">Electrical</option>
+              <option value="painting">Painting</option>
+            </select>
+            <select className="select" value={sortBy} onChange={(e) => setSortBy(e.target.value)}>
+              <option value="rating_desc">Top rated</option>
+              <option value="reviews_desc">Most reviews</option>
+              <option value="experience_desc">Most experienced</option>
+              <option value="name_asc">Name A-Z</option>
+            </select>
+          </div>
+          <div className="muted" style={{ marginTop: 8 }}>
+            Showing {visibleVendors.length} vendor{visibleVendors.length === 1 ? "" : "s"}{city ? ` in ${city}` : ""}.
+          </div>
           <div className="grid" style={{ marginTop: 14 }}>
-            {vendors.map((v) => (
+            {isLoading && <div className="muted">Loading vendors...</div>}
+            {!isLoading && visibleVendors.map((v) => (
               <div key={v.id} className="card" style={{ boxShadow: "none" }}>
                 <div style={{ fontFamily: "var(--font-display)" }}>{v.name}</div>
                 <div className="muted">{v.city} - {v.years_exp} yrs</div>
                 <div className="muted">Rating {v.avg_rating || "-"} ({v.review_count || 0})</div>
                 <div className="muted">Services: {(v.service_types || []).join(", ")}</div>
                 {v.external && <div className="badge">Live vendor</div>}
+                <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+                  {v.phone ? (
+                    <a className="btn btn-outline" href={toPhoneUrl(v.phone)}>
+                      Call
+                    </a>
+                  ) : null}
+                  {(v.whatsapp || v.phone) ? (
+                    <a className="btn btn-outline" href={toWhatsappUrl(v.whatsapp || v.phone)} target="_blank" rel="noreferrer">
+                      WhatsApp
+                    </a>
+                  ) : null}
+                </div>
                 {v.website && (
                   <a className="btn btn-outline" href={normalizeUrl(v.website)} target="_blank" rel="noreferrer">
                     {v.external ? "Open vendor site" : "Visit site"}
@@ -160,7 +257,7 @@ export default function Vendors() {
                 )}
               </div>
             ))}
-            {!vendors.length && <div className="muted">No vendors yet.</div>}
+            {!isLoading && !visibleVendors.length && <div className="muted">No vendors found for this filter.</div>}
           </div>
         </div>
 

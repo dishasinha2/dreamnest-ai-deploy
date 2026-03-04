@@ -490,6 +490,82 @@ export default function Project() {
     localStorage.setItem(`dreamnest_timeline_${id}`, JSON.stringify(next));
   }
 
+  function buildDeliverablesPayload() {
+    const checkedItems = checklist
+      .map((item, idx) => ({ item, done: Boolean(checkMap[`check_${idx}_${item}`]) }))
+      .filter((x) => x.done)
+      .map((x) => x.item);
+
+    const timelineRows = timeline.map((t) => ({
+      phase: t.phase,
+      task: t.task,
+      owner: timelineMap[t.id]?.owner || vendorBySkill(t.skill),
+      status: timelineMap[t.id]?.status || "todo"
+    }));
+
+    return {
+      project: {
+        id: Number(id),
+        title: project?.title || "",
+        room_type: project?.room_type || "",
+        location_city: project?.location_city || "",
+        budget_inr: project?.budget_inr || null
+      },
+      summary: {
+        checklist_done: checkedItems.length,
+        checklist_total: checklist.length,
+        timeline_done: timelineRows.filter((t) => t.status === "done").length,
+        timeline_total: timelineRows.length
+      },
+      zoning,
+      material_board: materialBoard,
+      completed_checklist_items: checkedItems,
+      timeline: timelineRows
+    };
+  }
+
+  function exportDeliverablesJson() {
+    try {
+      const payload = buildDeliverablesPayload();
+      const blob = new Blob([JSON.stringify(payload, null, 2)], { type: "application/json" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `dreamnest-deliverables-project-${id}.json`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(url);
+      setNotice("Deliverables exported as JSON.");
+    } catch {
+      setError("Unable to export deliverables right now.");
+    }
+  }
+
+  async function copyDeliverablesSummary() {
+    try {
+      const payload = buildDeliverablesPayload();
+      const text = [
+        `Project: ${payload.project.title}`,
+        `Room: ${payload.project.room_type}`,
+        `City: ${payload.project.location_city}`,
+        `Budget INR: ${payload.project.budget_inr || "-"}`,
+        `Checklist: ${payload.summary.checklist_done}/${payload.summary.checklist_total}`,
+        `Timeline: ${payload.summary.timeline_done}/${payload.summary.timeline_total}`,
+        "",
+        "Completed checklist:",
+        ...(payload.completed_checklist_items.length ? payload.completed_checklist_items.map((x) => `- ${x}`) : ["- None yet"]),
+        "",
+        "Timeline tasks:",
+        ...payload.timeline.map((t) => `- ${t.phase}: ${t.task} | ${t.status} | Owner: ${t.owner}`)
+      ].join("\n");
+      await navigator.clipboard.writeText(text);
+      setNotice("Deliverables summary copied.");
+    } catch {
+      setError("Clipboard not available in this browser.");
+    }
+  }
+
   const latestReq = requirements[0] || {};
   const stylePreview = asArray(project?.style_tags || "modern, warm").slice(0, 3);
   const colorPreview = asArray(latestReq?.colors || "").slice(0, 4);
@@ -726,7 +802,13 @@ export default function Project() {
       </div>
 
       <div className="glass-stack" style={{ marginTop: 22 }}>
-        <h3 style={{ fontFamily: "var(--font-display)" }}>Designer Deliverables</h3>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
+          <h3 style={{ fontFamily: "var(--font-display)", margin: 0 }}>Designer Deliverables</h3>
+          <div style={{ display: "flex", gap: 8 }}>
+            <button type="button" className="btn btn-outline" onClick={copyDeliverablesSummary}>Copy summary</button>
+            <button type="button" className="btn btn-outline" onClick={exportDeliverablesJson}>Export JSON</button>
+          </div>
+        </div>
         <div className="deliverables-summary">
           <div className="deliverables-kpi">
             <div className="muted">Checklist completion</div>
