@@ -13,27 +13,44 @@ import ProductMarketplace from "./pages/ProductMarketplace.jsx";
 import Wishlist from "./pages/Wishlist.jsx";
 
 export default function App() {
-  const [deviceMode, setDeviceMode] = useState(() => localStorage.getItem("dreamnest_device_mode") || "laptop");
+  const [preferredDeviceMode, setPreferredDeviceMode] = useState(() => {
+    const saved = localStorage.getItem("dreamnest_device_mode");
+    if (saved === "phone" || saved === "laptop") return saved;
+    if (typeof window !== "undefined" && window.innerWidth <= 900) return "phone";
+    return "laptop";
+  });
+  const [isNarrowViewport, setIsNarrowViewport] = useState(
+    () => (typeof window !== "undefined" ? window.innerWidth <= 900 : false)
+  );
 
   useEffect(() => {
-    const mode = deviceMode === "phone" ? "phone" : "laptop";
+    function onResize() {
+      setIsNarrowViewport(window.innerWidth <= 900);
+    }
+    window.addEventListener("resize", onResize);
+    return () => window.removeEventListener("resize", onResize);
+  }, []);
+
+  useEffect(() => {
+    const mode = isNarrowViewport ? "phone" : (preferredDeviceMode === "phone" ? "phone" : "laptop");
     document.documentElement.dataset.device = mode;
-    localStorage.setItem("dreamnest_device_mode", mode);
-  }, [deviceMode]);
+    localStorage.setItem("dreamnest_device_mode", preferredDeviceMode);
+  }, [preferredDeviceMode, isNarrowViewport]);
 
   return (
     <BrowserRouter>
       <div className="bg-atmos grid-veil">
         <div className="device-toggle">
           <button
-            className={`btn btn-outline ${deviceMode === "laptop" ? "is-active" : ""}`}
-            onClick={() => setDeviceMode("laptop")}
+            className={`btn btn-outline ${!isNarrowViewport && preferredDeviceMode === "laptop" ? "is-active" : ""}`}
+            onClick={() => setPreferredDeviceMode("laptop")}
+            disabled={isNarrowViewport}
           >
             Laptop
           </button>
           <button
-            className={`btn btn-outline ${deviceMode === "phone" ? "is-active" : ""}`}
-            onClick={() => setDeviceMode("phone")}
+            className={`btn btn-outline ${(isNarrowViewport || preferredDeviceMode === "phone") ? "is-active" : ""}`}
+            onClick={() => setPreferredDeviceMode("phone")}
           >
             Phone
           </button>

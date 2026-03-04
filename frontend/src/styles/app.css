@@ -7,6 +7,10 @@ body {
   letter-spacing: .08px;
   line-height: 1.45;
 }
+html, body {
+  width: 100%;
+  overflow-x: hidden;
+}
 body.chat-open .container {
   padding-right: 20px;
 }
@@ -1488,5 +1492,101 @@ pre { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liber
   .studio-visual img:first-child {
     grid-column: auto;
     height: 180px;
+  }
+}
+
+@media (max-width: 640px) {
+  .device-toggle {
+    display: none;
+  }
+  body.chat-open .container {
+    padding-right: 12px;
+  }
+  .container {
+    padding: 14px 10px 32px;
+  }
+  .device-toggle {
+    right: 10px;
+    top: 8px;
+    padding: 4px;
+    gap: 6px;
+  }
+  .device-toggle .btn {
+    padding: 6px 10px;
+    font-size: 11px;
+  }
+  .nav {
+    padding: 12px 8px;
+    gap: 10px;
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  .nav-brand {
+    font-size: 22px;
+  }
+  .nav-brand::before {
+    width: 26px;
+    height: 26px;
+    border-radius: 8px;
+  }
+  .nav-actions {
+    width: 100%;
+    flex-wrap: wrap;
+    justify-content: flex-start;
+    gap: 8px;
+  }
+  .nav-actions .btn {
+    font-size: 12px;
+    padding: 8px 11px;
+  }
+  .card,
+  .glass-stack,
+  .glass-panel {
+    padding: 12px;
+    border-radius: 14px;
+  }
+  .grid {
+    gap: 12px;
+  }
+  .hero-title {
+    font-size: 32px;
+  }
+  .hero-sub {
+    font-size: 16px;
+  }
+  .choice-card img {
+    height: 96px;
+  }
+  .choice-label {
+    font-size: 13px;
+  }
+  .market-image {
+    height: 190px;
+  }
+  .chat-drawer {
+    width: calc(100vw - 16px);
+    right: 8px;
+    left: 8px;
+    top: auto;
+    bottom: 70px;
+    height: min(68vh, 560px);
+    border-radius: 14px;
+    padding: 10px;
+  }
+  .chat-drawer .chat-messages {
+    max-height: 38vh;
+  }
+  .chat-fab {
+    right: 10px;
+    bottom: 10px;
+    width: 52px;
+    height: 52px;
+    border-radius: 14px;
+  }
+  .btn,
+  .input,
+  .select,
+  .textarea {
+    max-width: 100%;
   }
 }
