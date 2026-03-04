@@ -12,6 +12,8 @@ export default function Vendors() {
   const [notice, setNotice] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [serviceFilter, setServiceFilter] = useState("all");
+  const [minRating, setMinRating] = useState("3");
+  const [maxExternal, setMaxExternal] = useState("120");
   const [sortBy, setSortBy] = useState("rating_desc");
   const [step, setStep] = useState(0);
   const [previews, setPreviews] = useState([]);
@@ -32,7 +34,16 @@ export default function Vendors() {
     setIsLoading(true);
     setError("");
     try {
-      const rows = await VendorsAPI.list(nextCity ? { city: nextCity, include_external: "1" } : {});
+      const query = nextCity
+        ? {
+            city: nextCity,
+            include_external: "1",
+            max_external: maxExternal,
+            min_rating: minRating,
+            service: serviceFilter === "all" ? "" : serviceFilter
+          }
+        : {};
+      const rows = await VendorsAPI.list(query);
       setVendors(Array.isArray(rows) ? rows : []);
     } catch (e) {
       setError(String(e.message || e));
@@ -44,7 +55,7 @@ export default function Vendors() {
 
   useEffect(() => {
     loadVendorList(city);
-  }, [city]);
+  }, [city, serviceFilter, minRating, maxExternal]);
 
   function normalizeUrl(url) {
     if (!url) return "";
@@ -158,7 +169,7 @@ export default function Vendors() {
       <div className="grid grid-2" style={{ marginTop: 18 }}>
         <div className="card">
           <h3 style={{ fontFamily: "var(--font-display)" }}>Local vendors</h3>
-          <div className="grid" style={{ gridTemplateColumns: "1.5fr auto 1fr 1fr", gap: 8 }}>
+          <div className="grid" style={{ gridTemplateColumns: "1.5fr auto 1fr 1fr 1fr 1fr", gap: 8 }}>
             <input
               className="input"
               placeholder="Filter by city"
@@ -201,6 +212,17 @@ export default function Vendors() {
               <option value="reviews_desc">Most reviews</option>
               <option value="experience_desc">Most experienced</option>
               <option value="name_asc">Name A-Z</option>
+            </select>
+            <select className="select" value={minRating} onChange={(e) => setMinRating(e.target.value)}>
+              <option value="0">Any rating</option>
+              <option value="3">3.0+</option>
+              <option value="3.5">3.5+</option>
+              <option value="4">4.0+</option>
+            </select>
+            <select className="select" value={maxExternal} onChange={(e) => setMaxExternal(e.target.value)}>
+              <option value="60">Up to 60 live vendors</option>
+              <option value="90">Up to 90 live vendors</option>
+              <option value="120">Up to 120 live vendors</option>
             </select>
           </div>
           <div className="muted" style={{ marginTop: 8 }}>

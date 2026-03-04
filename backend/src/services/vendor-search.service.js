@@ -3,6 +3,9 @@ function toNumber(v, fallback = null) {
   return Number.isFinite(n) ? n : fallback;
 }
 
+const externalVendorCache = new Map();
+const CACHE_TTL_MS = 30 * 60 * 1000;
+
 function cityFromAddress(address = "", fallbackCity = "") {
   const text = String(address || "").trim();
   if (!text) return fallbackCity;
@@ -36,7 +39,7 @@ function mapResult(item, city, queryLabel) {
   };
 }
 
-async function fetchMapsVendors(city, queryLabel, limit = 20) {
+async function fetchMapsVendors(city, queryLabel, limit = 20, start = 0) {
   const apiKey = process.env.SERPAPI_KEY;
   if (!apiKey || !city) return [];
 
@@ -45,6 +48,7 @@ async function fetchMapsVendors(city, queryLabel, limit = 20) {
     q: `${queryLabel} in ${city}`,
     hl: "en",
     gl: "in",
+    start: String(start),
     api_key: apiKey
   });
 
@@ -56,9 +60,31 @@ async function fetchMapsVendors(city, queryLabel, limit = 20) {
   return rows.slice(0, limit).map((x) => mapResult(x, city, queryLabel));
 }
 
-export async function searchExternalVendorsByCity(city) {
+function dedupVendors(rows = []) {
+  const dedup = new Map();
+  for (const v of rows) {
+    const key = `${String(v.name || "").toLowerCase()}|${String(v.city || "").toLowerCase()}`;
+    if (!dedup.has(key)) dedup.set(key, v);
+  }
+  return Array.from(dedup.values());
+}
+
+function normalizeOptions(opts = {}) {
+  const max_external = Math.max(1, Math.min(120, Number(opts.max_external || 60)));
+  const min_rating = Number(opts.min_rating || 0);
+  const service = String(opts.service || "").trim().toLowerCase();
+  return { max_external, min_rating, service };
+}
+
+export async function searchExternalVendorsByCity(city, opts = {}) {
   const normalizedCity = String(city || "").trim();
   if (!normalizedCity) return [];
+  const options = normalizeOptions(opts);
+  const cacheKey = normalizedCity.toLowerCase();
+  const cached = externalVendorCache.get(cacheKey);
+  if (cached && Date.now() - cached.ts < CACHE_TTL_MS) {
+    return applyFilters(cached.rows, options).slice(0, options.max_external);
+  }
 
   const queries = [
     "interior designer",
@@ -71,18 +97,28 @@ export async function searchExternalVendorsByCity(city) {
   const all = [];
   for (const q of queries) {
     try {
-      const rows = await fetchMapsVendors(normalizedCity, q, 20);
-      all.push(...rows);
+      const [page1, page2] = await Promise.all([
+        fetchMapsVendors(normalizedCity, q, 20, 0),
+        fetchMapsVendors(normalizedCity, q, 20, 20)
+      ]);
+      all.push(...page1, ...page2);
     } catch {
       // Ignore upstream failures and return available results.
     }
   }
 
-  const dedup = new Map();
-  for (const v of all) {
-    const key = `${String(v.name || "").toLowerCase()}|${String(v.city || "").toLowerCase()}`;
-    if (!dedup.has(key)) dedup.set(key, v);
-  }
+  const rows = dedupVendors(all);
+  externalVendorCache.set(cacheKey, { ts: Date.now(), rows });
+  return applyFilters(rows, options).slice(0, options.max_external);
+}
 
-  return Array.from(dedup.values()).slice(0, 60);
+function applyFilters(rows = [], options = {}) {
+  const { min_rating = 0, service = "" } = options;
+  return rows.filter((v) => {
+    const ratingOk = Number(v.avg_rating || 0) >= min_rating;
+    if (!ratingOk) return false;
+    if (!service) return true;
+    const serviceText = Array.isArray(v.service_types) ? v.service_types.join(" ") : "";
+    return serviceText.toLowerCase().includes(service);
+  });
 }

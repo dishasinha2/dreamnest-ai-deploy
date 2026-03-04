@@ -130,7 +130,13 @@ export default function Project() {
   async function loadVendors(city) {
     setVendorNotice("");
     try {
-      const local = await VendorsAPI.list({ city, include_external: "1" });
+      const local = await VendorsAPI.list({
+        city,
+        include_external: "1",
+        max_external: "120",
+        min_rating: "3",
+        service: "interior"
+      });
       setVendors(local);
       if (!local.length) setVendorNotice(`No vendors found for ${city} right now.`);
     } catch {

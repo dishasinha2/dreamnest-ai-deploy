@@ -188,6 +188,14 @@ vendorRoutes.post("/apply/form", upload.array("images", 6), async (req, res) => 
 
 vendorRoutes.get("/", async (req, res) => {
   const { city, include_external } = req.query;
+  const maxExternalRaw = Number(req.query.max_external);
+  const minRatingRaw = Number(req.query.min_rating);
+  const serviceRaw = String(req.query.service || "").trim();
+  const externalOpts = {
+    max_external: Number.isFinite(maxExternalRaw) ? maxExternalRaw : undefined,
+    min_rating: Number.isFinite(minRatingRaw) ? minRatingRaw : undefined,
+    service: serviceRaw || undefined
+  };
 
   const [vendors] = await db.execute(
     `SELECT v.*,
@@ -231,7 +239,7 @@ vendorRoutes.get("/", async (req, res) => {
 
   if (!needExternal || !city) return res.json(dbVendors);
 
-  const external = await searchExternalVendorsByCity(String(city));
+  const external = await searchExternalVendorsByCity(String(city), externalOpts);
   return res.json([...dbVendors, ...external]);
 });
 
