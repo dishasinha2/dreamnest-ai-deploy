@@ -5,6 +5,7 @@ import { adminAuth } from "../middleware/admin.js";
 import { insertProjectEvent } from "../utils/projectEvents.js";
 import multer from "multer";
 import path from "path";
+import { searchExternalVendorsByCity } from "../services/vendor-search.service.js";
 
 const storage = multer.diskStorage({
   destination: (req, file, cb) => cb(null, path.join(process.cwd(), "uploads")),
@@ -186,7 +187,7 @@ vendorRoutes.post("/apply/form", upload.array("images", 6), async (req, res) => 
 });
 
 vendorRoutes.get("/", async (req, res) => {
-  const { city } = req.query;
+  const { city, include_external } = req.query;
 
   const [vendors] = await db.execute(
     `SELECT v.*,
@@ -201,26 +202,37 @@ vendorRoutes.get("/", async (req, res) => {
 
   // attach portfolio thumbnails
   const ids = vendors.map(v => v.id);
-  if (ids.length === 0) return res.json([]);
+  let grouped = new Map();
+  if (ids.length > 0) {
+    const [portfolio] = await db.query(
+      `SELECT vendor_id, image_url, title FROM vendor_portfolio
+       WHERE vendor_id IN (${ids.map(() => "?").join(",")})
+       ORDER BY created_at DESC`,
+      ids
+    );
 
-  const [portfolio] = await db.query(
-    `SELECT vendor_id, image_url, title FROM vendor_portfolio
-     WHERE vendor_id IN (${ids.map(() => "?").join(",")})
-     ORDER BY created_at DESC`,
-    ids
-  );
+    grouped = new Map();
+    portfolio.forEach(p => {
+      if (!grouped.has(p.vendor_id)) grouped.set(p.vendor_id, []);
+      if (grouped.get(p.vendor_id).length < 6) grouped.get(p.vendor_id).push(p);
+    });
+  }
 
-  const grouped = new Map();
-  portfolio.forEach(p => {
-    if (!grouped.has(p.vendor_id)) grouped.set(p.vendor_id, []);
-    if (grouped.get(p.vendor_id).length < 6) grouped.get(p.vendor_id).push(p);
-  });
-
-  res.json(vendors.map(v => ({
+  const dbVendors = vendors.map(v => ({
     ...v,
     service_types: safeJsonArray(v.service_types),
-    portfolio: grouped.get(v.id) || []
-  })));
+    portfolio: grouped.get(v.id) || [],
+    external: false
+  }));
+
+  const needExternal =
+    String(include_external || "").toLowerCase() === "1" ||
+    String(include_external || "").toLowerCase() === "true";
+
+  if (!needExternal || !city) return res.json(dbVendors);
+
+  const external = await searchExternalVendorsByCity(String(city));
+  return res.json([...dbVendors, ...external]);
 });
 
 vendorRoutes.get("/:id", async (req, res) => {

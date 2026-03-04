@@ -26,7 +26,7 @@ export default function Vendors() {
   });
 
   useEffect(() => {
-    VendorsAPI.list(city ? { city } : {})
+    VendorsAPI.list(city ? { city, include_external: "1" } : {})
       .then(setVendors)
       .catch((e) => setError(String(e.message || e)));
   }, [city]);
@@ -68,7 +68,7 @@ export default function Vendors() {
       setStep(0);
       setNotice("Application submitted. We will review it soon.");
       if (city) {
-        const next = await VendorsAPI.list({ city });
+        const next = await VendorsAPI.list({ city, include_external: "1" });
         setVendors(next);
       }
     } catch (err) {
@@ -129,12 +129,24 @@ export default function Vendors() {
                 <div className="muted">{v.city} - {v.years_exp} yrs</div>
                 <div className="muted">Rating {v.avg_rating || "-"} ({v.review_count || 0})</div>
                 <div className="muted">Services: {(v.service_types || []).join(", ")}</div>
+                {v.external && <div className="badge">Live vendor</div>}
                 {v.website && (
                   <a className="btn btn-outline" href={normalizeUrl(v.website)} target="_blank" rel="noreferrer">
-                    Visit site
+                    {v.external ? "Open vendor site" : "Visit site"}
                   </a>
                 )}
-                <a className="btn btn-outline" href={`/vendor/${v.id}`}>View profile</a>
+                {v.external ? (
+                  <a
+                    className="btn btn-outline"
+                    href={normalizeUrl(v.maps_url || `https://www.google.com/maps/search/${encodeURIComponent(`${v.name} ${v.city || ""}`)}`)}
+                    target="_blank"
+                    rel="noreferrer"
+                  >
+                    Open on maps
+                  </a>
+                ) : (
+                  <a className="btn btn-outline" href={`/vendor/${v.id}`}>View profile</a>
+                )}
                 {!!v.portfolio?.length && (
                   <div style={{ marginTop: 10 }}>
                     <div className="muted">Portfolio</div>
