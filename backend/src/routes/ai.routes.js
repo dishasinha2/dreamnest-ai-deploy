@@ -78,7 +78,18 @@ function fallbackPinterest({ room_type, style_tags, must_haves, colors }) {
 
 function wantsPinterestLinks(message) {
   const text = String(message || "").toLowerCase();
-  return /\b(pinterest|pin)\b|mood\s?board|inspiration|inspo|decor ideas?/.test(text);
+  return /\b(pinterest|pin)\b|mood\s?board|inspiration|inspo|decor ideas?|decorate|decorate this|design ideas?|style ideas?/.test(text);
+}
+
+function fallbackChatReply({ message, progress, links }) {
+  const msg = String(message || "").toLowerCase();
+  if (/(progress|status|kitna|kahan tak|update)/.test(msg) && progress) {
+    return `Project "${progress.project_title}" chal raha hai. Room: ${progress.room_type}, city: ${progress.city}. Shortlisted items: ${progress.shortlistCount}. Next step: requirements aur budget split confirm karo, phir product shortlist finalize karo.`;
+  }
+  if (links?.length) {
+    return "Yeh Pinterest inspiration links use karo. Inme se 2-3 mood select karo, fir main exact furniture/decor suggestions de dunga.";
+  }
+  return "Main abhi short help mode me hoon. Aap room type, style aur budget bhejo, main next actionable step dunga.";
 }
 
 async function generatePinterestLinks(payload = {}) {
@@ -148,13 +159,6 @@ aiRoutes.post("/chat", auth, async (req, res) => {
       }
     : null;
 
-  const data = await openaiResponse({
-    input: [
-      { role: "system", content: "You are Nestie, the DreamNest AI assistant. Reply in short friendly Hinglish. Give next actionable step. If asked about progress, use the provided progress JSON. If user asks for inspiration, include 8 Pinterest search keywords." },
-      { role: "user", content: `Progress JSON: ${JSON.stringify(progress)}\nUser: ${message}` }
-    ]
-  });
-
   let links = [];
   if (wantsPinterestLinks(message)) {
     links = await generatePinterestLinks({
@@ -166,7 +170,18 @@ aiRoutes.post("/chat", auth, async (req, res) => {
     });
   }
 
-  res.json({ reply: data.output_text || "", links });
+  try {
+    const data = await openaiResponse({
+      input: [
+        { role: "system", content: "You are Nestie, the DreamNest AI assistant. Reply in short friendly Hinglish. Give next actionable step. If asked about progress, use the provided progress JSON. If user asks for inspiration, include 8 Pinterest search keywords." },
+        { role: "user", content: `Progress JSON: ${JSON.stringify(progress)}\nUser: ${message}` }
+      ]
+    });
+    const reply = String(data?.output_text || "").trim();
+    return res.json({ reply: reply || fallbackChatReply({ message, progress, links }), links });
+  } catch {
+    return res.json({ reply: fallbackChatReply({ message, progress, links }), links });
+  }
 });
 
 aiRoutes.post("/plan", auth, async (req, res) => {
