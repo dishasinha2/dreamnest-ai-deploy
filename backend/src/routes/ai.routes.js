@@ -92,6 +92,20 @@ function fallbackChatReply({ message, progress, links }) {
   return "Main abhi short help mode me hoon. Aap room type, style aur budget bhejo, main next actionable step dunga.";
 }
 
+async function withTimeout(task, timeoutMs, fallbackValue) {
+  let timer;
+  try {
+    return await Promise.race([
+      task,
+      new Promise((resolve) => {
+        timer = setTimeout(() => resolve(fallbackValue), timeoutMs);
+      })
+    ]);
+  } finally {
+    if (timer) clearTimeout(timer);
+  }
+}
+
 async function generatePinterestLinks(payload = {}) {
   const { room_type, style_tags, must_haves, colors, notes } = payload;
   const fallback = fallbackPinterest({ room_type, style_tags, must_haves, colors });
@@ -171,12 +185,16 @@ aiRoutes.post("/chat", auth, async (req, res) => {
   }
 
   try {
-    const data = await openaiResponse({
-      input: [
-        { role: "system", content: "You are Nestie, the DreamNest AI assistant. Reply in short friendly Hinglish. Give next actionable step. If asked about progress, use the provided progress JSON. If user asks for inspiration, include 8 Pinterest search keywords." },
-        { role: "user", content: `Progress JSON: ${JSON.stringify(progress)}\nUser: ${message}` }
-      ]
-    });
+    const data = await withTimeout(
+      openaiResponse({
+        input: [
+          { role: "system", content: "You are Nestie, the DreamNest AI assistant. Reply in short friendly Hinglish. Give next actionable step. If asked about progress, use the provided progress JSON. If user asks for inspiration, include 8 Pinterest search keywords." },
+          { role: "user", content: `Progress JSON: ${JSON.stringify(progress)}\nUser: ${message}` }
+        ]
+      }),
+      20000,
+      { output_text: "" }
+    );
     const reply = String(data?.output_text || "").trim();
     return res.json({ reply: reply || fallbackChatReply({ message, progress, links }), links });
   } catch {
@@ -188,27 +206,31 @@ aiRoutes.post("/plan", auth, async (req, res) => {
   const { room_type, budget_inr, style_tags, must_haves, colors, area_sqft, location_city } = req.body;
   if (!room_type || !budget_inr) return res.status(400).json({ error: "room_type and budget_inr required" });
 
-  const data = await openaiResponse({
-    input: [
-      {
-        role: "system",
-        content:
-          "Return JSON only. Keys: budget_split (array of {category, amount_inr, note}), shopping_queries (array of strings), vendor_needs (array of strings)."
-      },
-      {
-        role: "user",
-        content: JSON.stringify({
-          room_type,
-          budget_inr,
-          style_tags: style_tags || [],
-          must_haves: must_haves || [],
-          colors: colors || [],
-          area_sqft: area_sqft || null,
-          location_city: location_city || ""
-        })
-      }
-    ]
-  });
+  const data = await withTimeout(
+    openaiResponse({
+      input: [
+        {
+          role: "system",
+          content:
+            "Return JSON only. Keys: budget_split (array of {category, amount_inr, note}), shopping_queries (array of strings), vendor_needs (array of strings)."
+        },
+        {
+          role: "user",
+          content: JSON.stringify({
+            room_type,
+            budget_inr,
+            style_tags: style_tags || [],
+            must_haves: must_haves || [],
+            colors: colors || [],
+            area_sqft: area_sqft || null,
+            location_city: location_city || ""
+          })
+        }
+      ]
+    }),
+    20000,
+    { output_text: JSON.stringify(fallbackPlan({ room_type, budget_inr, style_tags })) }
+  );
 
   let parsed = null;
   try {
