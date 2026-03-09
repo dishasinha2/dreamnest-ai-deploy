@@ -1043,6 +1043,8 @@ pre { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liber
   overflow: hidden;
   box-shadow: var(--shadow);
   transition: transform .18s ease, box-shadow .18s ease, border-color .18s ease;
+  content-visibility: auto;
+  contain-intrinsic-size: 420px;
 }
 .market-card:hover {
   transform: translateY(-3px);
@@ -1348,6 +1350,8 @@ pre { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liber
   background: rgba(255,255,255,.04);
   display: grid;
   gap: 6px;
+  content-visibility: auto;
+  contain-intrinsic-size: 140px;
 }
 .deliverable-check-row {
   display: grid;

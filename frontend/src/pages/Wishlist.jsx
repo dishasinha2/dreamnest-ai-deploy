@@ -60,7 +60,7 @@ export default function Wishlist() {
           {sorted.map((p, idx) => (
             <article key={`${normalizeUrl(p.product_url)}-${idx}`} className="market-card">
               {p.image_url ? (
-                <img className="market-image" src={p.image_url} alt={p.title} />
+                <img className="market-image" src={p.image_url} alt={p.title} loading="lazy" decoding="async" />
               ) : (
                 <div className="market-image market-image-empty">No image</div>
               )}

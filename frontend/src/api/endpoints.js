@@ -68,6 +68,10 @@ export const AIAPI = {
   pinterest: (payload, token) => api("/api/ai/pinterest", { method: "POST", body: payload, token })
 };
 
+export const SearchAPI = {
+  query: (params, token) => api(`/api/search?${new URLSearchParams(params)}`, { token })
+};
+
 export const FeedbackAPI = {
   submit: (payload) => api("/api/feedback", { method: "POST", body: payload })
 };

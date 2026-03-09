@@ -272,7 +272,7 @@ export default function Vendors() {
                     <div className="grid" style={{ gridTemplateColumns: "repeat(3,1fr)" }}>
                       {v.portfolio.map((p) => {
                         const img = p.image_url?.startsWith("http") ? p.image_url : `${BASE}${p.image_url}`;
-                        return <img key={p.image_url} src={img} alt={p.title} style={{ width: "100%", borderRadius: 12 }} />;
+                        return <img key={p.image_url} src={img} alt={p.title} loading="lazy" decoding="async" style={{ width: "100%", borderRadius: 12 }} />;
                       })}
                     </div>
                   </div>
@@ -353,7 +353,7 @@ export default function Vendors() {
                 {previews.length > 0 && (
                   <div className="preview-grid">
                     {previews.map((src) => (
-                      <img key={src} src={src} alt="preview" />
+                      <img key={src} src={src} alt="preview" loading="lazy" decoding="async" />
                     ))}
                   </div>
                 )}

@@ -84,9 +84,9 @@ export default function Landing() {
             </div>
           </div>
           <div className="card studio-visual reveal-block">
-            <img src="https://images.unsplash.com/photo-1616486338812-3dadae4b4ace?q=80&w=1400&auto=format&fit=crop" alt="Interior moodboard style space" />
-            <img src="https://images.unsplash.com/photo-1600210492493-0946911123ea?q=80&w=1200&auto=format&fit=crop" alt="Living room styling" />
-            <img src="https://images.unsplash.com/photo-1617104551722-3b2d51366464?q=80&w=1200&auto=format&fit=crop" alt="Designer living room setup" />
+            <img src="https://images.unsplash.com/photo-1616486338812-3dadae4b4ace?q=80&w=1400&auto=format&fit=crop" alt="Interior moodboard style space" decoding="async" />
+            <img src="https://images.unsplash.com/photo-1600210492493-0946911123ea?q=80&w=1200&auto=format&fit=crop" alt="Living room styling" loading="lazy" decoding="async" />
+            <img src="https://images.unsplash.com/photo-1617104551722-3b2d51366464?q=80&w=1200&auto=format&fit=crop" alt="Designer living room setup" loading="lazy" decoding="async" />
           </div>
         </motion.section>
 
@@ -133,7 +133,7 @@ export default function Landing() {
               "https://images.unsplash.com/photo-1616486029423-aaa4789e8c9a?q=80&w=1200&auto=format&fit=crop",
               "https://images.unsplash.com/photo-1615529182904-14819c35db37?q=80&w=1200&auto=format&fit=crop"
             ].map((src) => (
-              <img key={src} src={src} alt="Interior design portfolio" />
+              <img key={src} src={src} alt="Interior design portfolio" loading="lazy" decoding="async" />
             ))}
           </div>
         </motion.section>

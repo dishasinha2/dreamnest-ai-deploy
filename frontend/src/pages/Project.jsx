@@ -1,6 +1,6 @@
-import { useEffect, useState } from "react";
+import { startTransition, useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { AIAPI, ClicksAPI, ProductsAPI, ProjectAPI, RequirementsAPI, VendorsAPI } from "../api/endpoints";
+import { AIAPI, ClicksAPI, ProductsAPI, ProjectAPI, RequirementsAPI, SearchAPI, VendorsAPI } from "../api/endpoints";
 import { useAuth } from "../hooks/useAuth";
 
 const BASE = import.meta.env.VITE_API_BASE || "http://localhost:5000";
@@ -80,12 +80,24 @@ export default function Project() {
   const [reqForm, setReqForm] = useState({ notes: "", must_haves: "", colors: "" });
   const [error, setError] = useState("");
   const [notice, setNotice] = useState("");
+  const [searchInput, setSearchInput] = useState("");
+  const [searchLoading, setSearchLoading] = useState(false);
+  const [searchScope, setSearchScope] = useState("all");
+  const [searchHistory, setSearchHistory] = useState([]);
+  const [searchResults, setSearchResults] = useState({ projects: [], products: [], vendors: [], counts: null });
   const [marketPrefs, setMarketPrefs] = useState({
     store_priority: "ikea,flipkart,myntra,amazon,pepperfry,urbanladder,meesho,ebay",
     exact_only: false
   });
   const [checkMap, setCheckMap] = useState({});
   const [timelineMap, setTimelineMap] = useState({});
+
+  function toggleTheme() {
+    const root = document.documentElement;
+    const next = root.dataset.theme === "light" ? "dark" : "light";
+    root.dataset.theme = next;
+    localStorage.setItem("dreamnest_theme", next);
+  }
 
   useEffect(() => {
     if (!token) return;
@@ -114,6 +126,15 @@ export default function Project() {
   }, [id]);
 
   useEffect(() => {
+    try {
+      const saved = JSON.parse(localStorage.getItem(`dreamnest_search_history_${id}`) || "[]");
+      setSearchHistory(Array.isArray(saved) ? saved.filter(Boolean).slice(0, 8) : []);
+    } catch {
+      setSearchHistory([]);
+    }
+  }, [id]);
+
+  useEffect(() => {
     if (!project) return;
     const primaryRoom = String(project.room_type || "living_room").split(",").map((s) => s.trim()).filter(Boolean)[0] || "living_room";
     const primaryStyle = Array.isArray(project.style_tags)
@@ -137,11 +158,44 @@ export default function Project() {
         min_rating: "3",
         service: "interior"
       });
-      setVendors(local);
+      startTransition(() => {
+        setVendors(local);
+      });
       if (!local.length) setVendorNotice(`No vendors found for ${city} right now.`);
     } catch {
-      setVendors([]);
+      startTransition(() => {
+        setVendors([]);
+      });
       setVendorNotice("Unable to load vendors right now.");
+    }
+  }
+
+  async function runSearch(e) {
+    if (e?.preventDefault) e.preventDefault();
+    const q = searchInput.trim();
+    if (!q) return;
+    setSearchLoading(true);
+    setError("");
+    try {
+      const data = await SearchAPI.query({ q, limit: "6", scope: searchScope, project_id: String(id) }, token);
+      startTransition(() => {
+        setSearchResults({
+          projects: Array.isArray(data.projects) ? data.projects : [],
+          products: Array.isArray(data.products) ? data.products : [],
+          vendors: Array.isArray(data.vendors) ? data.vendors : [],
+          counts: data.counts || null
+        });
+      });
+      const nextHistory = [q, ...searchHistory.filter((item) => item !== q)].slice(0, 8);
+      setSearchHistory(nextHistory);
+      localStorage.setItem(`dreamnest_search_history_${id}`, JSON.stringify(nextHistory));
+    } catch (err) {
+      setError(String(err.message || err));
+      startTransition(() => {
+        setSearchResults({ projects: [], products: [], vendors: [], counts: null });
+      });
+    } finally {
+      setSearchLoading(false);
     }
   }
 
@@ -329,7 +383,9 @@ export default function Project() {
 
       const personalized = buildBudgetBalancedList(diversified, 220);
 
-      setLiveProducts(personalized);
+      startTransition(() => {
+        setLiveProducts(personalized);
+      });
       if (personalized.length) {
         localStorage.setItem(
           `dreamnest_market_${id}`,
@@ -453,6 +509,11 @@ export default function Project() {
     } catch {
       return "store";
     }
+  }
+
+  function clearSearchState() {
+    setSearchInput("");
+    setSearchResults({ projects: [], products: [], vendors: [], counts: null });
   }
 
   async function viewVendor(vendorId) {
@@ -583,6 +644,14 @@ export default function Project() {
   }
 
   const latestReq = requirements[0] || {};
+  const quickSearchTerms = Array.from(
+    new Set([
+      project?.location_city,
+      ...asArray(project?.room_type).map((item) => item.replaceAll("_", " ")),
+      ...asArray(project?.style_tags).map((item) => item.replaceAll("_", " ")),
+      ...asArray(latestReq?.must_haves)
+    ].filter(Boolean))
+  ).slice(0, 8);
   const stylePreview = asArray(project?.style_tags || "modern, warm").slice(0, 3);
   const colorPreview = asArray(latestReq?.colors || "").slice(0, 4);
   const conceptBoards = stylePreview.map((style, idx) => ({
@@ -665,6 +734,7 @@ export default function Project() {
           <span style={{ color: "var(--accent)" }}>Dream</span>Nest AI
         </div>
         <div className="nav-actions">
+          <button className="btn btn-outline" onClick={toggleTheme}>Theme</button>
           <a className="btn btn-outline" href="/dashboard">Dashboard</a>
           <a className="btn btn-outline" href="/vendors">Vendors</a>
           <a className="btn btn-outline" href="/feedback">Feedback</a>
@@ -715,6 +785,147 @@ export default function Project() {
       </div>
 
       <div className="grid grid-2" style={{ marginTop: 22 }}>
+        <div className="glass-stack">
+          <h3 style={{ fontFamily: "var(--font-display)" }}>Data Retrieval</h3>
+          <div className="muted">Search this workspace for matching projects, products, and vendors by room, city, style, or service.</div>
+          <form onSubmit={runSearch} className="grid" style={{ marginTop: 12 }}>
+            <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
+              <input
+                className="input"
+                placeholder="Search project data"
+                value={searchInput}
+                onChange={(e) => setSearchInput(e.target.value)}
+              />
+              <button className="btn btn-accent2" type="submit">
+                {searchLoading ? "Searching..." : "Retrieve"}
+              </button>
+              <button className="btn btn-outline" type="button" onClick={clearSearchState}>
+                Clear
+              </button>
+            </div>
+          </form>
+          <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginTop: 12 }}>
+            {["all", "projects", "products", "vendors"].map((scope) => (
+              <button
+                key={scope}
+                type="button"
+                className={`btn ${searchScope === scope ? "" : "btn-outline"}`}
+                onClick={() => setSearchScope(scope)}
+              >
+                {scope[0].toUpperCase() + scope.slice(1)}
+              </button>
+            ))}
+          </div>
+          {quickSearchTerms.length > 0 && (
+            <div style={{ marginTop: 12 }}>
+              <div className="muted" style={{ marginBottom: 6 }}>Quick suggestions</div>
+              <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+                {quickSearchTerms.map((term) => (
+                  <button
+                    key={term}
+                    type="button"
+                    className="btn btn-outline"
+                    onClick={() => setSearchInput(term)}
+                  >
+                    {term}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+          {searchHistory.length > 0 && (
+            <div style={{ marginTop: 12 }}>
+              <div className="muted" style={{ marginBottom: 6 }}>Recent searches</div>
+              <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+                {searchHistory.map((term) => (
+                  <button
+                    key={term}
+                    type="button"
+                    className="btn btn-outline"
+                    onClick={() => setSearchInput(term)}
+                  >
+                    {term}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+          {searchResults.counts && (
+            <div className="stats-grid" style={{ marginTop: 12 }}>
+              <div className="stat-card">
+                <div className="muted">Projects</div>
+                <div className="stat-number">{searchResults.counts.projects}</div>
+              </div>
+              <div className="stat-card">
+                <div className="muted">Products</div>
+                <div className="stat-number">{searchResults.counts.products}</div>
+              </div>
+              <div className="stat-card">
+                <div className="muted">Vendors</div>
+                <div className="stat-number">{searchResults.counts.vendors}</div>
+              </div>
+            </div>
+          )}
+          {searchResults.counts && searchResults.counts.projects === 0 && searchResults.counts.products === 0 && searchResults.counts.vendors === 0 && (
+            <div className="muted" style={{ marginTop: 12 }}>No matching data found for this query.</div>
+          )}
+          {(searchResults.projects.length > 0 || searchResults.products.length > 0 || searchResults.vendors.length > 0) && (
+            <div className="grid grid-3" style={{ marginTop: 12 }}>
+              <div className="card" style={{ boxShadow: "none" }}>
+                <div style={{ fontFamily: "var(--font-display)", marginBottom: 8 }}>Projects</div>
+                <div className="grid">
+                  {searchResults.projects.map((p) => (
+                    <div key={`search-project-${p.id}`} className="deliverable-item">
+                      <div style={{ fontFamily: "var(--font-display)" }}>{p.title}</div>
+                      <div className="muted">{p.room_type} - {p.location_city}</div>
+                      <button className="btn btn-outline" type="button" onClick={() => nav(`/project/${p.id}`)}>
+                        Open
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              </div>
+              <div className="card" style={{ boxShadow: "none" }}>
+                <div style={{ fontFamily: "var(--font-display)", marginBottom: 8 }}>Products</div>
+                <div className="grid">
+                  {searchResults.products.map((p) => (
+                    <div key={`search-product-${p.id}`} className="deliverable-item">
+                      <div style={{ fontFamily: "var(--font-display)" }}>{p.name}</div>
+                      <div className="muted">{p.category} - {p.style}</div>
+                      <div className="muted">INR {p.price_inr || "-"}</div>
+                      {p.product_url && (
+                        <a className="btn btn-outline" href={normalizeUrl(p.product_url)} target="_blank" rel="noreferrer">
+                          Open link
+                        </a>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </div>
+              <div className="card" style={{ boxShadow: "none" }}>
+                <div style={{ fontFamily: "var(--font-display)", marginBottom: 8 }}>Vendors</div>
+                <div className="grid">
+                  {searchResults.vendors.map((v) => (
+                    <div key={`search-vendor-${v.id}`} className="deliverable-item">
+                      <div style={{ fontFamily: "var(--font-display)" }}>{v.name}</div>
+                      <div className="muted">{v.city}</div>
+                      <div className="muted">{(v.service_types || []).join(", ")}</div>
+                      <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+                        <a className="btn btn-outline" href={`/vendor/${v.id}`}>Profile</a>
+                        {v.website && (
+                          <a className="btn btn-outline" href={normalizeUrl(v.website)} target="_blank" rel="noreferrer">
+                            Website
+                          </a>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+
         <div className="glass-stack">
           <h3 style={{ fontFamily: "var(--font-display)" }}>Requirements</h3>
           <form onSubmit={addRequirements} className="grid">
@@ -934,7 +1145,7 @@ export default function Project() {
           <div className="grid">
             {liveProducts.map((p, idx) => (
               <div key={`${p.product_url}-${idx}`} className="card" style={{ boxShadow: "none" }}>
-                {p.image_url && <img src={p.image_url} alt={p.title} style={{ width: "100%", borderRadius: 12 }} />}
+                {p.image_url && <img src={p.image_url} alt={p.title} loading="lazy" decoding="async" style={{ width: "100%", borderRadius: 12 }} />}
                 <div style={{ fontFamily: "var(--font-display)", marginTop: 8 }}>{p.title}</div>
                 {p.recommended_for && <div className="muted">For: {p.recommended_for}</div>}
                 <div className="muted">{p.currency} {p.price || "-"}</div>
@@ -1032,6 +1243,8 @@ export default function Project() {
                 <img
                   src={p.image_url.startsWith("http") ? p.image_url : `${BASE}${p.image_url}`}
                   alt={p.name}
+                  loading="lazy"
+                  decoding="async"
                   style={{ width: "100%", borderRadius: 12 }}
                 />
               )}

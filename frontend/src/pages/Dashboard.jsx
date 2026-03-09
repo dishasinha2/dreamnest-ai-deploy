@@ -1,6 +1,6 @@
-import { useEffect, useRef, useState } from "react";
+import { startTransition, useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { AIAPI, ProjectAPI, AuthAPI } from "../api/endpoints";
+import { AIAPI, ProjectAPI, AuthAPI, SearchAPI } from "../api/endpoints";
 import { useAuth } from "../hooks/useAuth";
 
 const IMAGE_FALLBACK = "https://images.unsplash.com/photo-1493663284031-b7e3aefcae8e?q=80&w=1200&auto=format&fit=crop";
@@ -64,6 +64,9 @@ export default function Dashboard() {
   const [chat, setChat] = useState({ message: "", reply: "", image: null });
   const [chatImagePreview, setChatImagePreview] = useState("");
   const [isTyping, setIsTyping] = useState(false);
+  const [searchInput, setSearchInput] = useState("");
+  const [searchLoading, setSearchLoading] = useState(false);
+  const [searchResults, setSearchResults] = useState({ projects: [], products: [], vendors: [], counts: null });
   const [chatHistory, setChatHistory] = useState([
     { role: "assistant", text: "Hi, I'm Nestie. Tumhara DreamNest buddy. Batao, kis room ke liye help chahiye? Budget aur style bhi share karo.", links: [] }
   ]);
@@ -79,10 +82,21 @@ export default function Dashboard() {
   });
   const [step, setStep] = useState(0);
 
+  function toggleTheme() {
+    const root = document.documentElement;
+    const next = root.dataset.theme === "light" ? "dark" : "light";
+    root.dataset.theme = next;
+    localStorage.setItem("dreamnest_theme", next);
+  }
+
   useEffect(() => {
     if (!token) return;
     ProjectAPI.list(token)
-      .then(setProjects)
+      .then((rows) => {
+        startTransition(() => {
+          setProjects(rows);
+        });
+      })
       .catch((e) => setError(String(e.message || e)));
     AuthAPI.me(token)
       .then((u) => setUserName(u.name || ""))
@@ -201,6 +215,30 @@ export default function Dashboard() {
     }
   }
 
+  async function runSearch(e) {
+    if (e?.preventDefault) e.preventDefault();
+    const q = searchInput.trim();
+    if (!q) return;
+    setSearchLoading(true);
+    setError("");
+    try {
+      const data = await SearchAPI.query({ q, limit: "6" }, token);
+      startTransition(() => {
+        setSearchResults({
+          projects: Array.isArray(data.projects) ? data.projects : [],
+          products: Array.isArray(data.products) ? data.products : [],
+          vendors: Array.isArray(data.vendors) ? data.vendors : [],
+          counts: data.counts || null
+        });
+      });
+    } catch (err) {
+      setError(String(err.message || err));
+      setSearchResults({ projects: [], products: [], vendors: [], counts: null });
+    } finally {
+      setSearchLoading(false);
+    }
+  }
+
   async function sendVisionFromChat(e) {
     if (e?.preventDefault) e.preventDefault();
     if (!chat.image) return;
@@ -254,6 +292,7 @@ export default function Dashboard() {
           <div className="nav-sub">Welcome{userName ? `, ${userName}` : ""}</div>
         </div>
         <div className="nav-actions">
+          <button className="btn btn-outline" onClick={toggleTheme}>Theme</button>
           <a className="btn btn-outline" href="/about">Intro</a>
           <a className="btn btn-outline" href="/vendors">Vendors</a>
           <a className="btn btn-outline" href="/feedback">Feedback</a>
@@ -348,6 +387,80 @@ export default function Dashboard() {
         </aside>
 
         <div className="dash-main">
+          <div className="card studio-main-card">
+            <h3 style={{ fontFamily: "var(--font-display)" }}>Data Retrieval</h3>
+            <p className="muted">Enter any input like room, city, style, project name, or vendor service.</p>
+            <form onSubmit={runSearch} className="grid">
+              <div style={{ display: "flex", gap: 10 }}>
+                <input
+                  className="input"
+                  placeholder="Search projects, products, vendors"
+                  value={searchInput}
+                  onChange={(e) => setSearchInput(e.target.value)}
+                />
+                <button className="btn btn-accent2" type="submit">
+                  {searchLoading ? "Searching..." : "Retrieve"}
+                </button>
+              </div>
+            </form>
+            {searchResults.counts && (
+              <div className="stats-grid" style={{ marginTop: 12 }}>
+                <div className="stat-card">
+                  <div className="muted">Projects</div>
+                  <div className="stat-number">{searchResults.counts.projects}</div>
+                </div>
+                <div className="stat-card">
+                  <div className="muted">Products</div>
+                  <div className="stat-number">{searchResults.counts.products}</div>
+                </div>
+                <div className="stat-card">
+                  <div className="muted">Vendors</div>
+                  <div className="stat-number">{searchResults.counts.vendors}</div>
+                </div>
+              </div>
+            )}
+            {(searchResults.projects.length > 0 || searchResults.products.length > 0 || searchResults.vendors.length > 0) && (
+              <div className="grid grid-3" style={{ marginTop: 12 }}>
+                <div className="glass-panel">
+                  <div className="panel-title">Projects</div>
+                  <div className="grid">
+                    {searchResults.projects.map((p) => (
+                      <div key={`project-${p.id}`} className="card" style={{ boxShadow: "none" }}>
+                        <div style={{ fontFamily: "var(--font-display)" }}>{p.title}</div>
+                        <div className="muted">{p.room_type} - {p.location_city}</div>
+                        <button className="btn btn-outline" onClick={() => nav(`/project/${p.id}`)}>Open</button>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+                <div className="glass-panel">
+                  <div className="panel-title">Products</div>
+                  <div className="grid">
+                    {searchResults.products.map((p) => (
+                      <div key={`product-${p.id}`} className="card" style={{ boxShadow: "none" }}>
+                        <div style={{ fontFamily: "var(--font-display)" }}>{p.name}</div>
+                        <div className="muted">{p.category} - {p.style}</div>
+                        <div className="muted">INR {p.price_inr || "-"}</div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+                <div className="glass-panel">
+                  <div className="panel-title">Vendors</div>
+                  <div className="grid">
+                    {searchResults.vendors.map((v) => (
+                      <div key={`vendor-${v.id}`} className="card" style={{ boxShadow: "none" }}>
+                        <div style={{ fontFamily: "var(--font-display)" }}>{v.name}</div>
+                        <div className="muted">{v.city}</div>
+                        <div className="muted">{(v.service_types || []).join(", ")}</div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+
           <div className="card studio-main-card">
             <h3 style={{ fontFamily: "var(--font-display)" }}>Design Brief Wizard</h3>
             <p className="muted">Step {step + 1} of 3</p>
@@ -558,7 +671,7 @@ export default function Dashboard() {
                 "https://images.unsplash.com/photo-1505691938895-1758d7feb511?q=80&w=800&auto=format&fit=crop",
                 "https://images.unsplash.com/photo-1502005097973-6a7082348e28?q=80&w=800&auto=format&fit=crop"
               ].map((src) => (
-                <img key={src} src={src} alt="Studio" />
+                <img key={src} src={src} alt="Studio" loading="lazy" decoding="async" />
               ))}
             </div>
           </div>
@@ -637,7 +750,7 @@ export default function Dashboard() {
           <form onSubmit={sendChat} className="grid">
             {chatImagePreview && (
               <div className="chat-preview">
-                <img src={chatImagePreview} alt="Upload preview" />
+                <img src={chatImagePreview} alt="Upload preview" loading="lazy" decoding="async" />
                 <button type="button" className="btn btn-outline" onClick={() => {
                   if (chatImagePreview) URL.revokeObjectURL(chatImagePreview);
                   setChatImagePreview("");

@@ -1,16 +1,25 @@
 import { BrowserRouter, Routes, Route } from "react-router-dom";
-import { useEffect, useState } from "react";
-import Landing from "./pages/Landing.jsx";
-import Auth from "./pages/Auth.jsx";
-import Dashboard from "./pages/Dashboard.jsx";
-import Project from "./pages/Project.jsx";
-import Vendors from "./pages/Vendors.jsx";
-import Admin from "./pages/Admin.jsx";
-import About from "./pages/About.jsx";
-import Feedback from "./pages/Feedback.jsx";
-import VendorProfile from "./pages/VendorProfile.jsx";
-import ProductMarketplace from "./pages/ProductMarketplace.jsx";
-import Wishlist from "./pages/Wishlist.jsx";
+import { Suspense, lazy, startTransition, useEffect, useState } from "react";
+
+const Landing = lazy(() => import("./pages/Landing.jsx"));
+const Auth = lazy(() => import("./pages/Auth.jsx"));
+const Dashboard = lazy(() => import("./pages/Dashboard.jsx"));
+const Project = lazy(() => import("./pages/Project.jsx"));
+const Vendors = lazy(() => import("./pages/Vendors.jsx"));
+const Admin = lazy(() => import("./pages/Admin.jsx"));
+const About = lazy(() => import("./pages/About.jsx"));
+const Feedback = lazy(() => import("./pages/Feedback.jsx"));
+const VendorProfile = lazy(() => import("./pages/VendorProfile.jsx"));
+const ProductMarketplace = lazy(() => import("./pages/ProductMarketplace.jsx"));
+const Wishlist = lazy(() => import("./pages/Wishlist.jsx"));
+
+function RouteFallback() {
+  return (
+    <div className="container">
+      <div className="card">Loading page...</div>
+    </div>
+  );
+}
 
 export default function App() {
   const [preferredDeviceMode, setPreferredDeviceMode] = useState(() => {
@@ -25,7 +34,9 @@ export default function App() {
 
   useEffect(() => {
     function onResize() {
-      setIsNarrowViewport(window.innerWidth <= 900);
+      startTransition(() => {
+        setIsNarrowViewport(window.innerWidth <= 900);
+      });
     }
     window.addEventListener("resize", onResize);
     return () => window.removeEventListener("resize", onResize);
@@ -68,19 +79,21 @@ export default function App() {
             Phone
           </button>
         </div>
-        <Routes>
-          <Route path="/" element={<Landing />} />
-          <Route path="/auth" element={<Auth />} />
-          <Route path="/dashboard" element={<Dashboard />} />
-          <Route path="/project/:id" element={<Project />} />
-          <Route path="/project/:id/marketplace" element={<ProductMarketplace />} />
-          <Route path="/wishlist" element={<Wishlist />} />
-          <Route path="/vendors" element={<Vendors />} />
-          <Route path="/admin" element={<Admin />} />
-          <Route path="/about" element={<About />} />
-          <Route path="/feedback" element={<Feedback />} />
-          <Route path="/vendor/:id" element={<VendorProfile />} />
-        </Routes>
+        <Suspense fallback={<RouteFallback />}>
+          <Routes>
+            <Route path="/" element={<Landing />} />
+            <Route path="/auth" element={<Auth />} />
+            <Route path="/dashboard" element={<Dashboard />} />
+            <Route path="/project/:id" element={<Project />} />
+            <Route path="/project/:id/marketplace" element={<ProductMarketplace />} />
+            <Route path="/wishlist" element={<Wishlist />} />
+            <Route path="/vendors" element={<Vendors />} />
+            <Route path="/admin" element={<Admin />} />
+            <Route path="/about" element={<About />} />
+            <Route path="/feedback" element={<Feedback />} />
+            <Route path="/vendor/:id" element={<VendorProfile />} />
+          </Routes>
+        </Suspense>
       </div>
     </BrowserRouter>
   );

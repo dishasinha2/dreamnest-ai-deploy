@@ -482,9 +482,9 @@ export default function ProductMarketplace() {
           return (
             <article key={`${url}-${idx}`} className="market-card">
               {p.image_url ? (
-                <img className="market-image" src={p.image_url} alt={p.title} />
+                <img className="market-image" src={p.image_url} alt={p.title} loading="lazy" decoding="async" />
               ) : (
-                <img className="market-image" src={fallbackImage(p.title, p.source)} alt={p.title} />
+                <img className="market-image" src={fallbackImage(p.title, p.source)} alt={p.title} loading="lazy" decoding="async" />
               )}
               <div className="market-body">
                 <h3>{p.title}</h3>
@@ -634,7 +634,7 @@ export default function ProductMarketplace() {
               <div className="preview-stage">
                 {preview.mode === "compose" ? (
                   preview.room ? (
-                    <img className="preview-room" src={preview.room} alt="room preview" />
+                    <img className="preview-room" src={preview.room} alt="room preview" decoding="async" />
                   ) : (
                     <div className="preview-room-empty">Upload room image to preview product</div>
                   )
@@ -660,6 +660,7 @@ export default function ProductMarketplace() {
                     className="preview-product"
                     src={preview.product.image_url || fallbackImage(preview.product.title, preview.product.source)}
                     alt={preview.product.title}
+                    decoding="async"
                     style={{
                       left: `${preview.x}%`,
                       top: `${preview.y}%`,

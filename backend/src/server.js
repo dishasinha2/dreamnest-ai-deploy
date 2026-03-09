@@ -11,6 +11,7 @@ import { aiRoutes } from "./routes/ai.routes.js";
 import { requirementsRoutes } from "./routes/requirements.routes.js";
 import { analyticsRoutes } from "./routes/analytics.routes.js";
 import { feedbackRoutes } from "./routes/feedback.routes.js";
+import { searchRoutes } from "./routes/search.routes.js";
 import { ensureCoreTables } from "./bootstrap/ensureTables.js";
 import path from "path";
 import fs from "fs";
@@ -54,6 +55,7 @@ app.use("/api/ai", aiRoutes);
 app.use("/api/requirements", requirementsRoutes);
 app.use("/api/analytics", analyticsRoutes);
 app.use("/api/feedback", feedbackRoutes);
+app.use("/api/search", searchRoutes);
 
 // basic error handler so API returns JSON instead of crashing
 app.use((err, req, res, next) => {

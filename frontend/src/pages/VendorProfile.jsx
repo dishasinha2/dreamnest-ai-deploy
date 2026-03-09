@@ -73,7 +73,7 @@ export default function VendorProfile() {
             {(vendor.portfolio || []).map((p) => {
               const img = p.image_url?.startsWith("http") ? p.image_url : `${BASE}${p.image_url}`;
               return (
-                <img key={p.id} src={img} alt={p.title} style={{ width: "100%", borderRadius: 14 }} />
+                <img key={p.id} src={img} alt={p.title} loading="lazy" decoding="async" style={{ width: "100%", borderRadius: 14 }} />
               );
             })}
             {!vendor.portfolio?.length && <div className="muted">No portfolio yet.</div>}

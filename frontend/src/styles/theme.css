@@ -18,15 +18,15 @@
 }
 
 :root[data-theme="light"]{
-  --bg0: #f3f6f9;
-  --bg1: #e9eff4;
-  --bg2: #eff4f1;
-  --ink: #1c2730;
-  --muted: rgba(28,39,48,.67);
-  --accent: #9f7446;
-  --accent2:#567887;
-  --accent3:#678a57;
-  --card: rgba(255,255,255,.84);
-  --stroke: rgba(28,39,48,.14);
-  --shadow: 0 18px 48px rgba(18,28,38,.12);
+  --bg0: #fbf8f2;
+  --bg1: #f4efe6;
+  --bg2: #ece8df;
+  --ink: #22303a;
+  --muted: rgba(34,48,58,.68);
+  --accent: #9a6f43;
+  --accent2:#6b8792;
+  --accent3:#7a9570;
+  --card: rgba(255,251,245,.88);
+  --stroke: rgba(34,48,58,.12);
+  --shadow: 0 20px 52px rgba(63,53,39,.10);
 }
