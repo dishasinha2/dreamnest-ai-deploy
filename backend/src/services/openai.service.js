@@ -30,9 +30,13 @@ export async function openaiResponse({ input }) {
     });
   }
 
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), 22000);
+
   try {
     const r = await fetch("https://api.groq.com/openai/v1/chat/completions", {
       method: "POST",
+      signal: controller.signal,
       headers: {
         Authorization: `Bearer ${apiKey}`,
         "Content-Type": "application/json"
@@ -54,7 +58,9 @@ export async function openaiResponse({ input }) {
     return { output_text };
   } catch {
     return fallback(
-      "AI service temporarily unavailable. Please try again."
+      "AI request timed out or failed. Please try again."
     );
+  } finally {
+    clearTimeout(timer);
   }
 }

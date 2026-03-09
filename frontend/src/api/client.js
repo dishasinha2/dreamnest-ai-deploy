@@ -4,16 +4,24 @@ export async function api(path, { method="GET", token, body, isForm, headers: ex
   const headers = { ...(extraHeaders || {}) };
   if (token) headers.Authorization = `Bearer ${token}`;
   if (!isForm) headers["Content-Type"] = "application/json";
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), 25000);
 
   let res;
   try {
     res = await fetch(`${BASE}${path}`, {
       method,
       headers,
+      signal: controller.signal,
       body: isForm ? body : body ? JSON.stringify(body) : undefined
     });
-  } catch {
+  } catch (err) {
+    if (err?.name === "AbortError") {
+      throw new Error("Request timed out. Please try again.");
+    }
     throw new Error(`Cannot reach API at ${BASE}. Start backend or fix VITE_API_BASE.`);
+  } finally {
+    clearTimeout(timer);
   }
 
   if (!res.ok) {
