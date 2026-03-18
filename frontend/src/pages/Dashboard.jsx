@@ -2,6 +2,7 @@ import { startTransition, useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { AIAPI, ProjectAPI, AuthAPI, SearchAPI } from "../api/endpoints";
 import { useAuth } from "../hooks/useAuth";
+import SiteFooter from "../components/SiteFooter";
 
 const IMAGE_FALLBACK = "https://images.unsplash.com/photo-1493663284031-b7e3aefcae8e?q=80&w=1200&auto=format&fit=crop";
 
@@ -439,6 +440,26 @@ export default function Dashboard() {
               </div>
             )}
           </div>
+          <div className="card studio-side-card" style={{ marginTop: 12 }}>
+            <div className="panel-title">Your projects</div>
+            <div className="grid" style={{ marginTop: 10 }}>
+              {projects.map((p) => (
+                <div key={p.id} className="retrieval-item static">
+                  <strong>{p.title}</strong>
+                  <span>{p.room_type} - {p.location_city}</span>
+                  <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginTop: 4 }}>
+                    <button className="btn btn-outline" onClick={() => nav(`/project/${p.id}`)}>
+                      Open
+                    </button>
+                    <button className="btn btn-outline" onClick={() => deleteProject(p.id)}>
+                      Delete
+                    </button>
+                  </div>
+                </div>
+              ))}
+              {!projects.length && <div className="muted">No projects yet.</div>}
+            </div>
+          </div>
         </aside>
 
         <div className="dash-main">
@@ -648,62 +669,9 @@ export default function Dashboard() {
             </div>
             </form>
           </div>
-
-          <div className="card studio-main-card projects-card">
-            <h3 style={{ fontFamily: "var(--font-display)" }}>Your projects</h3>
-            <div className="glass-panel" style={{ marginBottom: 12 }}>
-              <div className="section-sub">Quick Start</div>
-              <div className="muted">1. Create project</div>
-              <div className="muted">2. Add requirements</div>
-              <div className="muted">3. Generate AI plan</div>
-              <div className="muted">4. Shortlist products and vendors</div>
-            </div>
-          <div className="glass-panel" style={{ marginBottom: 12 }}>
-            <div className="section-sub">Studio Gallery</div>
-            <div className="gallery-scroll">
-              {[
-                "https://images.unsplash.com/photo-1493663284031-b7e3aefcae8e?q=80&w=800&auto=format&fit=crop",
-                "https://images.unsplash.com/photo-1505691938895-1758d7feb511?q=80&w=800&auto=format&fit=crop",
-                "https://images.unsplash.com/photo-1524758631624-e2822e304c36?q=80&w=800&auto=format&fit=crop",
-                "https://images.unsplash.com/photo-1484101403633-562f891dc89a?q=80&w=800&auto=format&fit=crop",
-                "https://images.unsplash.com/photo-1502005097973-6a7082348e28?q=80&w=800&auto=format&fit=crop",
-                "https://images.unsplash.com/photo-1501876725168-00c445821c9e?q=80&w=800&auto=format&fit=crop",
-                "https://images.unsplash.com/photo-1505691723518-36a5ac3be353?q=80&w=800&auto=format&fit=crop",
-                "https://images.unsplash.com/photo-1524758631624-e2822e304c36?q=80&w=800&auto=format&fit=crop",
-                "https://images.unsplash.com/photo-1505691938895-1758d7feb511?q=80&w=800&auto=format&fit=crop",
-                "https://images.unsplash.com/photo-1502005097973-6a7082348e28?q=80&w=800&auto=format&fit=crop"
-              ].map((src) => (
-                <img key={src} src={src} alt="Studio" loading="lazy" decoding="async" />
-              ))}
-            </div>
-          </div>
-            <div className="glass-panel" style={{ marginBottom: 12 }}>
-              <div className="section-sub">AI Modules</div>
-              <div className="muted">Budget split + layout plan</div>
-              <div className="muted">Furniture recommendations with buy links</div>
-              <div className="muted">Vision-based decor ideas</div>
-              <div className="muted">Progress chatbot</div>
-            </div>
-            <div className="grid">
-              {projects.map((p) => (
-                <div key={p.id} className="card" style={{ boxShadow: "none" }}>
-                  <div style={{ fontFamily: "var(--font-display)" }}>{p.title}</div>
-                  <div className="muted">{p.room_type} - {p.location_city}</div>
-                  <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-                    <button className="btn btn-outline" onClick={() => nav(`/project/${p.id}`)}>
-                      Open project
-                    </button>
-                    <button className="btn btn-outline" onClick={() => deleteProject(p.id)}>
-                      Delete
-                    </button>
-                  </div>
-                </div>
-              ))}
-              {!projects.length && <div className="muted">No projects yet.</div>}
-            </div>
-          </div>
         </div>
       </div>
+      <SiteFooter />
 
       <button className="chat-fab" onClick={() => setChatOpen(!chatOpen)} aria-label="Open chatbot">
         <svg className="chat-fab-icon" viewBox="0 0 24 24" fill="none" aria-hidden="true">
