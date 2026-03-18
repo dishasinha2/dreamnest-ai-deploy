@@ -74,6 +74,7 @@ export default function Project() {
   const [vendors, setVendors] = useState([]);
   const [shortlistedVendors, setShortlistedVendors] = useState([]);
   const [vendorNotice, setVendorNotice] = useState("");
+  const [selectedVendor, setSelectedVendor] = useState(null);
   const [chat, setChat] = useState({ message: "", reply: "", links: [] });
   const [vision, setVision] = useState({ file: null, result: "" });
   const [pinterestLinks, setPinterestLinks] = useState([]);
@@ -517,6 +518,14 @@ export default function Project() {
   function clearSearchState() {
     setSearchInput("");
     setSearchResults({ projects: [], products: [], vendors: [], counts: null });
+  }
+
+  function openVendorModal(vendor) {
+    setSelectedVendor(vendor);
+  }
+
+  function closeVendorModal() {
+    setSelectedVendor(null);
   }
 
   async function viewVendor(vendorId) {
@@ -1165,6 +1174,9 @@ export default function Project() {
                 <div className="muted">Rating {v.avg_rating || "-"} ({v.review_count || 0})</div>
                 {v.external && <div className="badge">Live vendor</div>}
                 <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+                  <button className="btn btn-outline" type="button" onClick={() => openVendorModal(v)}>
+                    View more
+                  </button>
                   {v.external ? (
                     <>
                       {(v.phone || v.whatsapp) && (
@@ -1214,6 +1226,9 @@ export default function Project() {
               <div style={{ fontFamily: "var(--font-display)" }}>{v.name}</div>
               <div className="muted">{v.city} - {v.years_exp} yrs</div>
               <div className="muted">Rating {v.avg_rating || "-"} ({v.review_count || 0})</div>
+              <button className="btn btn-outline" type="button" onClick={() => openVendorModal(v)}>
+                View more
+              </button>
               {v.website && (
                 <a className="btn btn-outline" href={normalizeUrl(v.website)} target="_blank" rel="noreferrer">
                   Visit site
@@ -1250,6 +1265,72 @@ export default function Project() {
           {!dbProducts.length && <div className="muted">No products in DB yet. Use Admin to ingest.</div>}
         </div>
       </div>
+
+      {selectedVendor && (
+        <div className="preview-modal-overlay" onClick={closeVendorModal}>
+          <div className="preview-modal vendor-modal" onClick={(e) => e.stopPropagation()}>
+            <div className="preview-head">
+              <span>{selectedVendor.name}</span>
+              <button className="btn btn-outline" type="button" onClick={closeVendorModal}>Close</button>
+            </div>
+            <div className="grid grid-2">
+              <div className="card" style={{ boxShadow: "none" }}>
+                <div style={{ fontFamily: "var(--font-display)", marginBottom: 8 }}>Overview</div>
+                <div className="muted">City: {selectedVendor.city || "Not available"}</div>
+                <div className="muted">Experience: {selectedVendor.years_exp || 0} yrs</div>
+                <div className="muted">Rating: {selectedVendor.avg_rating || "-"} ({selectedVendor.review_count || 0} reviews)</div>
+                <div className="muted" style={{ marginTop: 8 }}>
+                  Services: {Array.isArray(selectedVendor.service_types) ? selectedVendor.service_types.join(", ") : selectedVendor.service_types || "Interior design"}
+                </div>
+                {selectedVendor.about && (
+                  <div className="muted" style={{ marginTop: 8 }}>{selectedVendor.about}</div>
+                )}
+                {selectedVendor.external && <div className="badge" style={{ marginTop: 10 }}>Live vendor</div>}
+              </div>
+              <div className="card" style={{ boxShadow: "none" }}>
+                <div style={{ fontFamily: "var(--font-display)", marginBottom: 8 }}>Actions</div>
+                <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+                  {(selectedVendor.phone || selectedVendor.whatsapp) && (
+                    <a className="btn btn-outline" href={toPhoneUrl(selectedVendor.phone || selectedVendor.whatsapp)}>
+                      Call
+                    </a>
+                  )}
+                  {(selectedVendor.whatsapp || selectedVendor.phone) && (
+                    <a className="btn btn-outline" href={toWhatsappUrl(selectedVendor.whatsapp || selectedVendor.phone)} target="_blank" rel="noreferrer">
+                      WhatsApp
+                    </a>
+                  )}
+                  {(selectedVendor.maps_url || selectedVendor.city || selectedVendor.name) && (
+                    <a
+                      className="btn btn-outline"
+                      href={normalizeUrl(selectedVendor.maps_url || `https://www.google.com/maps/search/${encodeURIComponent(`${selectedVendor.name} ${selectedVendor.city || ""}`)}`)}
+                      target="_blank"
+                      rel="noreferrer"
+                    >
+                      Open on maps
+                    </a>
+                  )}
+                  {selectedVendor.website && (
+                    <a className="btn btn-outline" href={normalizeUrl(selectedVendor.website)} target="_blank" rel="noreferrer">
+                      Visit site
+                    </a>
+                  )}
+                  {!selectedVendor.external && selectedVendor.id && (
+                    <>
+                      <button className="btn btn-outline" type="button" onClick={() => viewVendor(selectedVendor.id)}>
+                        Mark viewed
+                      </button>
+                      <button className="btn" type="button" onClick={() => shortlistVendor(selectedVendor.id)}>
+                        Shortlist vendor
+                      </button>
+                    </>
+                  )}
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       <div className="grid grid-2" style={{ marginTop: 22 }}>
         <div className="glass-stack">
