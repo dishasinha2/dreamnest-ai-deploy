@@ -218,6 +218,16 @@ pre { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liber
 }
 .nav-actions { display: flex; gap: 10px; align-items: center; }
 .nav-actions .btn { white-space: nowrap; }
+.nav-icon-btn {
+  width: 42px;
+  height: 42px;
+  padding: 0;
+  justify-content: center;
+}
+.nav-icon-btn svg {
+  width: 18px;
+  height: 18px;
+}
 
 .hero-center {
   text-align: center;
@@ -1330,6 +1340,73 @@ pre { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liber
 .studio-main-card {
   background: linear-gradient(145deg, rgba(255,255,255,.065), rgba(255,255,255,.03));
 }
+.wizard-card,
+.projects-card {
+  grid-column: 1 / -1;
+}
+.wizard-meta {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin: 8px 0 12px;
+}
+.wizard-meta span,
+.status-lines,
+.retrieval-item {
+  border: 1px solid var(--stroke);
+  border-radius: 12px;
+  background: rgba(255,255,255,.05);
+}
+.wizard-meta span {
+  padding: 8px 10px;
+  color: var(--muted);
+  font-size: 13px;
+}
+.status-lines {
+  margin-top: 12px;
+  padding: 10px 12px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+.status-lines strong {
+  font-family: var(--font-display);
+  font-size: 18px;
+}
+.compact-panel .card {
+  padding: 12px;
+}
+.compact-stats {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+.retrieval-btn {
+  justify-content: center;
+}
+.retrieval-stack {
+  display: grid;
+  gap: 8px;
+  margin-top: 12px;
+}
+.retrieval-item {
+  width: 100%;
+  padding: 10px 12px;
+  text-align: left;
+  color: var(--ink);
+  display: grid;
+  gap: 4px;
+}
+.retrieval-item strong {
+  font-family: var(--font-display);
+  font-size: 17px;
+}
+.retrieval-item span {
+  color: var(--muted);
+  font-size: 13px;
+}
+.retrieval-item.static {
+  cursor: default;
+}
 
 .deliverables-summary {
   display: grid;
@@ -1570,6 +1647,11 @@ pre { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liber
     font-size: 12px;
     padding: 8px 11px;
   }
+  .nav-icon-btn {
+    width: 38px;
+    height: 38px;
+    padding: 0;
+  }
   .card,
   .glass-stack,
   .glass-panel {
@@ -1620,5 +1702,11 @@ pre { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liber
   .select,
   .textarea {
     max-width: 100%;
+  }
+  .wizard-meta {
+    flex-direction: column;
+  }
+  .compact-stats {
+    grid-template-columns: 1fr;
   }
 }

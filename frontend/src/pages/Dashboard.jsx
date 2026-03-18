@@ -1,4 +1,4 @@
-import { startTransition, useEffect, useRef, useState } from "react";
+import { startTransition, useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { AIAPI, ProjectAPI, AuthAPI, SearchAPI } from "../api/endpoints";
 import { useAuth } from "../hooks/useAuth";
@@ -71,6 +71,7 @@ export default function Dashboard() {
     { role: "assistant", text: "Hi, I'm Nestie. Tumhara DreamNest buddy. Batao, kis room ke liye help chahiye? Budget aur style bhi share karo.", links: [] }
   ]);
   const [userName, setUserName] = useState("");
+  const [themeMode, setThemeMode] = useState(() => document.documentElement.dataset.theme || localStorage.getItem("dreamnest_theme") || "dark");
   const chatEndRef = useRef(null);
   const [form, setForm] = useState({
     title: "",
@@ -87,6 +88,7 @@ export default function Dashboard() {
     const next = root.dataset.theme === "light" ? "dark" : "light";
     root.dataset.theme = next;
     localStorage.setItem("dreamnest_theme", next);
+    setThemeMode(next);
   }
 
   useEffect(() => {
@@ -157,6 +159,16 @@ export default function Dashboard() {
   }
 
   const minBudget = Math.max(1500 * Number(form.area_sqft || 0), 60000);
+  const roomTypes = useMemo(
+    () => (form.room_type || "").split(",").map((s) => s.trim()).filter(Boolean),
+    [form.room_type]
+  );
+  const roomTypeSet = useMemo(() => new Set(roomTypes), [roomTypes]);
+  const styleTags = useMemo(
+    () => (form.style_tags || "").split(",").map((s) => s.trim()).filter(Boolean),
+    [form.style_tags]
+  );
+  const styleTagSet = useMemo(() => new Set(styleTags), [styleTags]);
   const budgetSplit = form.budget_inr
     ? [
         { label: "Furniture", pct: 45 },
@@ -187,13 +199,11 @@ export default function Dashboard() {
       setChatHistory((h) => [...h, { role: "user", text: message }]);
       setChat((c) => ({ ...c, message: "" }));
       setIsTyping(true);
-      const roomTypes = (form.room_type || "").split(",").map((s) => s.trim()).filter(Boolean);
-      const styles = (form.style_tags || "").split(",").map((s) => s.trim()).filter(Boolean);
       const res = await AIAPI.chat(
         {
           message,
           room_type: roomTypes[0] || "living_room",
-          style_tags: styles,
+          style_tags: styleTags,
           notes: `Dashboard quick chat. City: ${form.location_city || "not set"}`
         },
         token
@@ -292,9 +302,22 @@ export default function Dashboard() {
           <div className="nav-sub">Welcome{userName ? `, ${userName}` : ""}</div>
         </div>
         <div className="nav-actions">
-          <button className="btn btn-outline" onClick={toggleTheme}>Theme</button>
-          <a className="btn btn-outline" href="/about">Intro</a>
-          <a className="btn btn-outline" href="/vendors">Vendors</a>
+          <button
+            className="btn btn-outline nav-icon-btn"
+            onClick={toggleTheme}
+            aria-label={`Switch to ${themeMode === "light" ? "dark" : "light"} theme`}
+            title={`Switch to ${themeMode === "light" ? "dark" : "light"} theme`}
+          >
+            {themeMode === "light" ? (
+              <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                <path d="M12 3v2.5M12 18.5V21M4.93 4.93l1.77 1.77M17.3 17.3l1.77 1.77M3 12h2.5M18.5 12H21M4.93 19.07 6.7 17.3M17.3 6.7l1.77-1.77M16 12a4 4 0 1 1-8 0 4 4 0 0 1 8 0Z" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
+              </svg>
+            ) : (
+              <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                <path d="M20 15.2A7.8 7.8 0 0 1 8.8 4 8.4 8.4 0 1 0 20 15.2Z" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
+              </svg>
+            )}
+          </button>
           <a className="btn btn-outline" href="/feedback">Feedback</a>
           <button className="btn btn-outline" onClick={() => setToken("")}>Logout</button>
         </div>
@@ -325,23 +348,8 @@ export default function Dashboard() {
       <div className="dash-wrap">
         <aside className="dash-side">
           <div className="card studio-side-card">
-            <div className="panel-title">Studio Panel</div>
-            <div className="muted">Your workspace for design, budget, and vendor flow.</div>
-            <div className="icon-row" style={{ justifyContent: "flex-start", marginTop: 10 }}>
-              {[
-                { t: "Brief", svg: (<svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M4 7h16M4 12h10M4 17h7" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/></svg>) },
-                { t: "Budget", svg: (<svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M4 6h16M7 6v12M17 6v12M4 18h16" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/></svg>) },
-                { t: "Vendors", svg: (<svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M12 21s6-5 6-10a6 6 0 1 0-12 0c0 5 6 10 6 10Z" stroke="currentColor" strokeWidth="2"/><circle cx="12" cy="11" r="2" stroke="currentColor" strokeWidth="2"/></svg>) }
-              ].map((x)=>(
-                <div key={x.t} className="icon-chip">
-                  <i>{x.svg}</i>
-                  {x.t}
-                </div>
-              ))}
-            </div>
-          </div>
-          <div className="card studio-side-card" style={{ marginTop: 12 }}>
-            <div className="panel-title">Stats</div>
+            <div className="panel-title">Project Snapshot</div>
+            <div className="muted">Track the current brief without splitting attention away from the wizard.</div>
             <div className="stats-grid">
               <div className="stat-card">
                 <div className="muted">Projects</div>
@@ -360,11 +368,15 @@ export default function Dashboard() {
                 <div className="stat-number">{formatINR(form.budget_inr)}</div>
               </div>
             </div>
+            <div className="status-lines">
+              <span>Current step</span>
+              <strong>{step + 1} / 3</strong>
+            </div>
             {budgetSplit.length > 0 && (
-              <div className="glass-panel" style={{ marginTop: 12 }}>
+              <div className="glass-panel compact-panel" style={{ marginTop: 12 }}>
                 <div className="panel-title">Spend Distribution</div>
                 <div className="grid">
-                  {budgetSplit.map((b) => (
+                  {budgetSplit.slice(0, 3).map((b) => (
                     <div key={b.label} className="card" style={{ boxShadow: "none" }}>
                       <div style={{ fontFamily: "var(--font-display)" }}>{b.label}</div>
                       <div className="muted">{b.pct}% | INR {b.amount}</div>
@@ -375,36 +387,21 @@ export default function Dashboard() {
             )}
           </div>
           <div className="card studio-side-card" style={{ marginTop: 12 }}>
-            <a className="side-link" href="/about">Intro</a>
-            <a className="side-link" href="/vendors">Vendor Marketplace</a>
-            <a className="side-link" href="/feedback">Feedback</a>
-          </div>
-          <div className="card studio-side-card" style={{ marginTop: 12 }}>
-            <div className="panel-title">Status</div>
-            <div className="muted">Projects: {projects.length}</div>
-            <div className="muted">Step: {step + 1} / 3</div>
-          </div>
-        </aside>
-
-        <div className="dash-main">
-          <div className="card studio-main-card">
-            <h3 style={{ fontFamily: "var(--font-display)" }}>Data Retrieval</h3>
-            <p className="muted">Enter any input like room, city, style, project name, or vendor service.</p>
-            <form onSubmit={runSearch} className="grid">
-              <div style={{ display: "flex", gap: 10 }}>
-                <input
-                  className="input"
-                  placeholder="Search projects, products, vendors"
-                  value={searchInput}
-                  onChange={(e) => setSearchInput(e.target.value)}
-                />
-                <button className="btn btn-accent2" type="submit">
-                  {searchLoading ? "Searching..." : "Retrieve"}
-                </button>
-              </div>
+            <div className="panel-title">Data Retrieval</div>
+            <div className="muted">Search projects, products, and vendors from one compact panel.</div>
+            <form onSubmit={runSearch} className="grid" style={{ marginTop: 12 }}>
+              <input
+                className="input"
+                placeholder="Search room, city, style"
+                value={searchInput}
+                onChange={(e) => setSearchInput(e.target.value)}
+              />
+              <button className="btn btn-accent2 retrieval-btn" type="submit">
+                {searchLoading ? "Searching..." : "Retrieve"}
+              </button>
             </form>
             {searchResults.counts && (
-              <div className="stats-grid" style={{ marginTop: 12 }}>
+              <div className="stats-grid compact-stats" style={{ marginTop: 12 }}>
                 <div className="stat-card">
                   <div className="muted">Projects</div>
                   <div className="stat-number">{searchResults.counts.projects}</div>
@@ -420,50 +417,39 @@ export default function Dashboard() {
               </div>
             )}
             {(searchResults.projects.length > 0 || searchResults.products.length > 0 || searchResults.vendors.length > 0) && (
-              <div className="grid grid-3" style={{ marginTop: 12 }}>
-                <div className="glass-panel">
-                  <div className="panel-title">Projects</div>
-                  <div className="grid">
-                    {searchResults.projects.map((p) => (
-                      <div key={`project-${p.id}`} className="card" style={{ boxShadow: "none" }}>
-                        <div style={{ fontFamily: "var(--font-display)" }}>{p.title}</div>
-                        <div className="muted">{p.room_type} - {p.location_city}</div>
-                        <button className="btn btn-outline" onClick={() => nav(`/project/${p.id}`)}>Open</button>
-                      </div>
-                    ))}
+              <div className="retrieval-stack">
+                {searchResults.projects.slice(0, 2).map((p) => (
+                  <button key={`project-${p.id}`} className="retrieval-item" onClick={() => nav(`/project/${p.id}`)} type="button">
+                    <strong>{p.title}</strong>
+                    <span>{p.room_type} • {p.location_city}</span>
+                  </button>
+                ))}
+                {searchResults.products.slice(0, 2).map((p) => (
+                  <div key={`product-${p.id}`} className="retrieval-item static">
+                    <strong>{p.name}</strong>
+                    <span>{p.category} • {p.style}</span>
                   </div>
-                </div>
-                <div className="glass-panel">
-                  <div className="panel-title">Products</div>
-                  <div className="grid">
-                    {searchResults.products.map((p) => (
-                      <div key={`product-${p.id}`} className="card" style={{ boxShadow: "none" }}>
-                        <div style={{ fontFamily: "var(--font-display)" }}>{p.name}</div>
-                        <div className="muted">{p.category} - {p.style}</div>
-                        <div className="muted">INR {p.price_inr || "-"}</div>
-                      </div>
-                    ))}
+                ))}
+                {searchResults.vendors.slice(0, 2).map((v) => (
+                  <div key={`vendor-${v.id}`} className="retrieval-item static">
+                    <strong>{v.name}</strong>
+                    <span>{v.city}</span>
                   </div>
-                </div>
-                <div className="glass-panel">
-                  <div className="panel-title">Vendors</div>
-                  <div className="grid">
-                    {searchResults.vendors.map((v) => (
-                      <div key={`vendor-${v.id}`} className="card" style={{ boxShadow: "none" }}>
-                        <div style={{ fontFamily: "var(--font-display)" }}>{v.name}</div>
-                        <div className="muted">{v.city}</div>
-                        <div className="muted">{(v.service_types || []).join(", ")}</div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
+                ))}
               </div>
             )}
           </div>
+        </aside>
 
-          <div className="card studio-main-card">
+        <div className="dash-main">
+          <div className="card studio-main-card wizard-card">
             <h3 style={{ fontFamily: "var(--font-display)" }}>Design Brief Wizard</h3>
-            <p className="muted">Step {step + 1} of 3</p>
+            <p className="muted">The main control surface for room type, style, and budget planning.</p>
+            <div className="wizard-meta">
+              <span>Step {step + 1} of 3</span>
+              <span>{roomTypes.length || 0} room types selected</span>
+              <span>{styleTags.length || 0} styles selected</span>
+            </div>
             <div className="progress-bar" style={{ marginBottom: 12 }}>
               <span style={{ width: `${((step + 1) / 3) * 100}%` }} />
             </div>
@@ -493,13 +479,13 @@ export default function Dashboard() {
                   <div className="panel-title">Select Room Type</div>
                   <div className="choice-grid">
                     {ROOM_OPTIONS.map((r) => {
-                      const roomSet = new Set((form.room_type || "").split(",").map(s => s.trim()).filter(Boolean));
-                      const selected = roomSet.has(r.id);
+                      const selected = roomTypeSet.has(r.id);
                       return (
                       <div
                         key={r.id}
                         className={`choice-card ${selected ? "selected multi" : ""}`}
                         onClick={() => {
+                          const roomSet = new Set(roomTypeSet);
                           if (selected) roomSet.delete(r.id); else roomSet.add(r.id);
                           setForm({ ...form, room_type: Array.from(roomSet).join(",") });
                         }}
@@ -532,13 +518,13 @@ export default function Dashboard() {
                 </div>
                 <div className="choice-grid">
                   {STYLE_OPTIONS.map((r) => {
-                    const tags = new Set((form.style_tags || "").split(",").map(s => s.trim()).filter(Boolean));
-                    const selected = tags.has(r.id);
+                    const selected = styleTagSet.has(r.id);
                     return (
                       <div
                         key={r.id}
                         className={`choice-card ${selected ? "selected" : ""}`}
                         onClick={() => {
+                          const tags = new Set(styleTagSet);
                           if (selected) tags.delete(r.id); else tags.add(r.id);
                           setForm({ ...form, style_tags: Array.from(tags).join(",") });
                         }}
@@ -647,7 +633,7 @@ export default function Dashboard() {
             </form>
           </div>
 
-          <div className="card studio-main-card">
+          <div className="card studio-main-card projects-card">
             <h3 style={{ fontFamily: "var(--font-display)" }}>Your projects</h3>
             <div className="glass-panel" style={{ marginBottom: 12 }}>
               <div className="section-sub">Quick Start</div>
