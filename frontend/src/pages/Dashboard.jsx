@@ -461,22 +461,49 @@ export default function Dashboard() {
             <form onSubmit={createProject} className="grid">
             {step === 0 && (
               <>
-                <div className="glass-panel">
-                  <div className="panel-title">Room Basics</div>
-                  <div className="muted">Tell us what space you are designing.</div>
+                <div className="grid grid-2 wizard-brief-row">
+                  <div className="glass-panel brief-panel">
+                    <div className="panel-title">Room Basics</div>
+                    <div className="muted">Name the project and define the core brief clearly.</div>
+                    <input
+                      className="input"
+                      style={{ marginTop: 12 }}
+                      placeholder="Project title"
+                      value={form.title}
+                      onChange={(e) => setForm({ ...form, title: e.target.value })}
+                    />
+                  </div>
+                  <div className="glass-panel brief-panel">
+                    <div className="panel-title">Area</div>
+                    <div className="muted">Enter the total area in square feet for more accurate planning.</div>
+                    <input
+                      className="input"
+                      style={{ marginTop: 12 }}
+                      placeholder="Area (sqft)"
+                      type="number"
+                      value={form.area_sqft}
+                      onChange={(e) => setForm({ ...form, area_sqft: e.target.value })}
+                    />
+                    <div className="wizard-inline-note">Recommended minimum budget: INR {minBudget}</div>
+                  </div>
                 </div>
-                <div className="glass-panel">
-                  <div className="panel-title">Area</div>
-                  <div className="muted">Enter the total area in square feet.</div>
-                </div>
-                <input
-                  className="input"
-                  placeholder="Project title"
-                  value={form.title}
-                  onChange={(e) => setForm({ ...form, title: e.target.value })}
-                />
-                <div className="glass-panel">
-                  <div className="panel-title">Select Room Type</div>
+                <div className="glass-panel room-select-panel">
+                  <div className="room-selection-top">
+                    <div>
+                      <div className="panel-title">Select Room Type</div>
+                      <div className="muted">Choose one or more spaces from the visual brief board.</div>
+                    </div>
+                    <div className="room-selection-meta">
+                      <div className="room-selection-kpi">
+                        <strong>{roomTypes.length || 0}</strong>
+                        <span>rooms</span>
+                      </div>
+                      <div className="room-selection-kpi">
+                        <strong>{form.area_sqft || 0}</strong>
+                        <span>sqft</span>
+                      </div>
+                    </div>
+                  </div>
                   <div className="choice-grid">
                     {ROOM_OPTIONS.map((r) => {
                       const selected = roomTypeSet.has(r.id);
@@ -495,17 +522,6 @@ export default function Dashboard() {
                       </div>
                     )})}
                   </div>
-                </div>
-                <input
-                  className="input"
-                  placeholder="Area (sqft)"
-                  type="number"
-                  value={form.area_sqft}
-                  onChange={(e) => setForm({ ...form, area_sqft: e.target.value })}
-                />
-                <div className="glass-panel">
-                  <div className="panel-title">Minimum AI Budget</div>
-                  <div className="muted">Recommended minimum: INR {minBudget}</div>
                 </div>
                 {null}
               </>

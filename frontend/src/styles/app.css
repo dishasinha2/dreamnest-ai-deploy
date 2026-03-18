@@ -34,8 +34,8 @@ img { display: block; }
 pre { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace; }
 
 .container {
-  width: min(1220px, 100%);
-  max-width: 1220px;
+  width: min(1540px, calc(100% - 24px));
+  max-width: 1540px;
   margin: 0 auto;
   padding: 40px 22px;
 }
@@ -686,12 +686,12 @@ pre { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liber
 
 .dash-wrap {
   display: grid;
-  grid-template-columns: 240px 1fr;
-  gap: 18px;
+  grid-template-columns: 270px minmax(0, 1fr);
+  gap: 22px;
 }
 .dash-main {
   display: grid;
-  gap: 18px;
+  gap: 22px;
   grid-template-columns: repeat(2, minmax(0, 1fr));
 }
 .dash-side {
@@ -748,24 +748,24 @@ pre { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liber
 
 .choice-grid {
   display: grid;
-  gap: 10px;
+  gap: 14px;
   grid-template-columns: repeat(4, minmax(0, 1fr));
 }
 .choice-card {
   border: 1px solid var(--stroke);
-  border-radius: 16px;
-  background: linear-gradient(160deg, rgba(255,255,255,.08), rgba(255,255,255,.03));
-  padding: 8px;
+  border-radius: 20px;
+  background: linear-gradient(160deg, rgba(255,255,255,.1), rgba(255,255,255,.035));
+  padding: 10px;
   cursor: pointer;
   transition: transform .18s ease, border-color .18s ease, box-shadow .18s ease;
   overflow: hidden;
-  box-shadow: 0 10px 28px rgba(0,0,0,.18);
+  box-shadow: 0 14px 34px rgba(0,0,0,.14);
 }
 .choice-card img {
   width: 100%;
   height: auto;
-  aspect-ratio: 4 / 3;
-  border-radius: 12px;
+  aspect-ratio: 4 / 2.85;
+  border-radius: 14px;
   object-fit: cover;
   background: rgba(255,255,255,.04);
 }
@@ -779,9 +779,9 @@ pre { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liber
   border-color: rgba(255,255,255,.35);
 }
 .choice-label {
-  margin-top: 8px;
+  margin-top: 10px;
   font-family: var(--font-body);
-  font-size: 14px;
+  font-size: 15px;
   font-weight: 700;
   text-align: center;
   line-height: 1.2;
@@ -789,6 +789,58 @@ pre { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liber
 }
 .choice-card.multi {
   border-color: var(--accent2);
+}
+.wizard-brief-row {
+  align-items: stretch;
+}
+.brief-panel {
+  display: grid;
+  align-content: start;
+  min-height: 176px;
+}
+.wizard-inline-note {
+  border: 1px solid var(--stroke);
+  border-radius: 12px;
+  padding: 10px 12px;
+  background: rgba(255,255,255,.05);
+  color: var(--muted);
+  font-size: 14px;
+}
+.room-select-panel {
+  display: grid;
+  gap: 14px;
+}
+.room-selection-top {
+  display: flex;
+  justify-content: space-between;
+  gap: 14px;
+  align-items: flex-start;
+  flex-wrap: wrap;
+}
+.room-selection-meta {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+.room-selection-kpi {
+  min-width: 112px;
+  border: 1px solid var(--stroke);
+  border-radius: 14px;
+  background: rgba(255,255,255,.05);
+  padding: 10px 12px;
+  display: grid;
+  gap: 4px;
+}
+.room-selection-kpi strong {
+  font-family: var(--font-display);
+  font-size: 24px;
+  line-height: .9;
+}
+.room-selection-kpi span {
+  color: var(--muted);
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: .35px;
 }
 
 .gallery-scroll {
@@ -1622,6 +1674,9 @@ pre { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liber
   }
   .site-footer {
     grid-template-columns: 1fr;
+  }
+  .room-selection-top {
+    flex-direction: column;
   }
 }
 
