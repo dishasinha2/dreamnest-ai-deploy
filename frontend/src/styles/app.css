@@ -1407,6 +1407,33 @@ pre { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liber
 .retrieval-item.static {
   cursor: default;
 }
+.site-footer {
+  margin-top: 24px;
+  border: 1px solid var(--stroke);
+  border-radius: 20px;
+  padding: 18px 20px;
+  background: linear-gradient(145deg, rgba(255,255,255,.08), rgba(255,255,255,.03));
+  display: grid;
+  grid-template-columns: 1.2fr .8fr 1fr;
+  gap: 16px;
+  align-items: start;
+}
+.site-footer-brand,
+.site-footer-links,
+.site-footer-meta {
+  display: grid;
+  gap: 8px;
+}
+.site-footer-mark {
+  font-size: 24px;
+}
+.site-footer-mark::before {
+  width: 28px;
+  height: 28px;
+}
+.site-footer-links a {
+  color: var(--ink);
+}
 
 .deliverables-summary {
   display: grid;
@@ -1592,6 +1619,9 @@ pre { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liber
   .studio-visual img:first-child {
     grid-column: auto;
     height: 180px;
+  }
+  .site-footer {
+    grid-template-columns: 1fr;
   }
 }
 

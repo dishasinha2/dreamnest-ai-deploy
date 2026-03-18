@@ -2,6 +2,7 @@ import { startTransition, useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { AIAPI, ClicksAPI, ProductsAPI, ProjectAPI, RequirementsAPI, SearchAPI, VendorsAPI } from "../api/endpoints";
 import { useAuth } from "../hooks/useAuth";
+import SiteFooter from "../components/SiteFooter";
 
 const BASE = import.meta.env.VITE_API_BASE || "http://localhost:5000";
 
@@ -91,12 +92,14 @@ export default function Project() {
   });
   const [checkMap, setCheckMap] = useState({});
   const [timelineMap, setTimelineMap] = useState({});
+  const [themeMode, setThemeMode] = useState(() => document.documentElement.dataset.theme || localStorage.getItem("dreamnest_theme") || "dark");
 
   function toggleTheme() {
     const root = document.documentElement;
     const next = root.dataset.theme === "light" ? "dark" : "light";
     root.dataset.theme = next;
     localStorage.setItem("dreamnest_theme", next);
+    setThemeMode(next);
   }
 
   useEffect(() => {
@@ -734,9 +737,23 @@ export default function Project() {
           <span style={{ color: "var(--accent)" }}>Dream</span>Nest AI
         </div>
         <div className="nav-actions">
-          <button className="btn btn-outline" onClick={toggleTheme}>Theme</button>
+          <button
+            className="btn btn-outline nav-icon-btn"
+            onClick={toggleTheme}
+            aria-label={`Switch to ${themeMode === "light" ? "dark" : "light"} theme`}
+            title={`Switch to ${themeMode === "light" ? "dark" : "light"} theme`}
+          >
+            {themeMode === "light" ? (
+              <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                <path d="M12 3v2.5M12 18.5V21M4.93 4.93l1.77 1.77M17.3 17.3l1.77 1.77M3 12h2.5M18.5 12H21M4.93 19.07 6.7 17.3M17.3 6.7l1.77-1.77M16 12a4 4 0 1 1-8 0 4 4 0 0 1 8 0Z" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
+              </svg>
+            ) : (
+              <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                <path d="M20 15.2A7.8 7.8 0 0 1 8.8 4 8.4 8.4 0 1 0 20 15.2Z" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
+              </svg>
+            )}
+          </button>
           <a className="btn btn-outline" href="/dashboard">Dashboard</a>
-          <a className="btn btn-outline" href="/vendors">Vendors</a>
           <a className="btn btn-outline" href="/feedback">Feedback</a>
         </div>
       </div>
@@ -765,26 +782,27 @@ export default function Project() {
         </div>
       </div>
 
-      <div className="glass-stack">
-        <div style={{ fontFamily: "var(--font-display)", fontSize: 22 }}>{project.title}</div>
-        <div className="muted">
-          {project.room_type} - {project.location_city} - {project.area_sqft} sqft - Budget INR {project.budget_inr}
-        </div>
-        {progress && (
-          <div style={{ marginTop: 12 }}>
-            <div className="muted">Progress: {progress.percent}%</div>
-            <div className="grid" style={{ gridTemplateColumns: "repeat(4,1fr)" }}>
-              {progress.steps.map((s) => (
-                <div key={s.key} className="badge" style={{ background: s.done ? "var(--accent)" : "transparent", color: s.done ? "#0B0F14" : "var(--ink)" }}>
-                  {s.label}
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
-      </div>
-
       <div className="grid grid-2" style={{ marginTop: 22 }}>
+        <div className="glass-stack">
+          <div style={{ fontFamily: "var(--font-display)", fontSize: 22 }}>{project.title}</div>
+          <div className="muted">
+            {project.room_type} - {project.location_city} - {project.area_sqft} sqft - Budget INR {project.budget_inr}
+          </div>
+          {progress && (
+            <div style={{ marginTop: 12 }}>
+              <div className="muted">Progress: {progress.percent}%</div>
+              <div className="stats-grid compact-stats" style={{ marginTop: 10 }}>
+                {progress.steps.map((s) => (
+                  <div key={s.key} className="stat-card">
+                    <div className="muted">{s.label}</div>
+                    <div className="stat-number">{s.done ? "Done" : "Pending"}</div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+
         <div className="glass-stack">
           <h3 style={{ fontFamily: "var(--font-display)" }}>Data Retrieval</h3>
           <div className="muted">Search this workspace for matching projects, products, and vendors by room, city, style, or service.</div>
@@ -870,58 +888,31 @@ export default function Project() {
             <div className="muted" style={{ marginTop: 12 }}>No matching data found for this query.</div>
           )}
           {(searchResults.projects.length > 0 || searchResults.products.length > 0 || searchResults.vendors.length > 0) && (
-            <div className="grid grid-3" style={{ marginTop: 12 }}>
-              <div className="card" style={{ boxShadow: "none" }}>
-                <div style={{ fontFamily: "var(--font-display)", marginBottom: 8 }}>Projects</div>
-                <div className="grid">
-                  {searchResults.projects.map((p) => (
-                    <div key={`search-project-${p.id}`} className="deliverable-item">
-                      <div style={{ fontFamily: "var(--font-display)" }}>{p.title}</div>
-                      <div className="muted">{p.room_type} - {p.location_city}</div>
-                      <button className="btn btn-outline" type="button" onClick={() => nav(`/project/${p.id}`)}>
-                        Open
-                      </button>
-                    </div>
-                  ))}
-                </div>
-              </div>
-              <div className="card" style={{ boxShadow: "none" }}>
-                <div style={{ fontFamily: "var(--font-display)", marginBottom: 8 }}>Products</div>
-                <div className="grid">
-                  {searchResults.products.map((p) => (
-                    <div key={`search-product-${p.id}`} className="deliverable-item">
-                      <div style={{ fontFamily: "var(--font-display)" }}>{p.name}</div>
-                      <div className="muted">{p.category} - {p.style}</div>
-                      <div className="muted">INR {p.price_inr || "-"}</div>
-                      {p.product_url && (
-                        <a className="btn btn-outline" href={normalizeUrl(p.product_url)} target="_blank" rel="noreferrer">
-                          Open link
-                        </a>
-                      )}
-                    </div>
-                  ))}
-                </div>
-              </div>
-              <div className="card" style={{ boxShadow: "none" }}>
-                <div style={{ fontFamily: "var(--font-display)", marginBottom: 8 }}>Vendors</div>
-                <div className="grid">
-                  {searchResults.vendors.map((v) => (
-                    <div key={`search-vendor-${v.id}`} className="deliverable-item">
-                      <div style={{ fontFamily: "var(--font-display)" }}>{v.name}</div>
-                      <div className="muted">{v.city}</div>
-                      <div className="muted">{(v.service_types || []).join(", ")}</div>
-                      <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-                        <a className="btn btn-outline" href={`/vendor/${v.id}`}>Profile</a>
-                        {v.website && (
-                          <a className="btn btn-outline" href={normalizeUrl(v.website)} target="_blank" rel="noreferrer">
-                            Website
-                          </a>
-                        )}
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
+            <div className="retrieval-stack">
+              {searchResults.projects.slice(0, 2).map((p) => (
+                <button key={`search-project-${p.id}`} className="retrieval-item" type="button" onClick={() => nav(`/project/${p.id}`)}>
+                  <strong>{p.title}</strong>
+                  <span>{p.room_type} • {p.location_city}</span>
+                </button>
+              ))}
+              {searchResults.products.slice(0, 2).map((p) => (
+                <a
+                  key={`search-product-${p.id}`}
+                  className="retrieval-item"
+                  href={p.product_url ? normalizeUrl(p.product_url) : "#"}
+                  target="_blank"
+                  rel="noreferrer"
+                >
+                  <strong>{p.name}</strong>
+                  <span>{p.category} • {p.style} • INR {p.price_inr || "-"}</span>
+                </a>
+              ))}
+              {searchResults.vendors.slice(0, 2).map((v) => (
+                <a key={`search-vendor-${v.id}`} className="retrieval-item" href={`/vendor/${v.id}`}>
+                  <strong>{v.name}</strong>
+                  <span>{v.city} • {(v.service_types || []).join(", ")}</span>
+                </a>
+              ))}
             </div>
           )}
         </div>
@@ -1309,6 +1300,7 @@ export default function Project() {
 
       {notice && <div className="muted" style={{ marginTop: 12 }}>{notice}</div>}
       {error && <div className="muted" style={{ marginTop: 18 }}>{error}</div>}
+      <SiteFooter />
     </div>
   );
 }

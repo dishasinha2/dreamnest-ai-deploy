@@ -1,5 +1,6 @@
 import { motion } from "framer-motion";
 import { useEffect, useState } from "react";
+import SiteFooter from "../components/SiteFooter";
 
 const stagger = { show: { transition: { staggerChildren: 0.08, delayChildren: 0.12 } } };
 const item = { hidden: { opacity: 0, y: 14 }, show: { opacity: 1, y: 0 } };
@@ -149,6 +150,9 @@ export default function Landing() {
             <a className="btn btn-outline" href="/vendors">Explore Vendors</a>
           </div>
         </motion.section>
+        <motion.div variants={item}>
+          <SiteFooter />
+        </motion.div>
       </motion.div>
     </div>
   );
