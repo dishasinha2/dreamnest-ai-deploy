@@ -140,17 +140,24 @@ const ddl = [
   )`
 ];
 
-const followUpDdl = [
-  "ALTER TABLE users ADD COLUMN IF NOT EXISTS failed_login_count INT NOT NULL DEFAULT 0",
-  "ALTER TABLE users ADD COLUMN IF NOT EXISTS locked_until DATETIME NULL",
-  "ALTER TABLE users ADD COLUMN IF NOT EXISTS is_active TINYINT(1) NOT NULL DEFAULT 1"
-];
+async function ensureUserSecurityColumns() {
+  const [columns] = await db.query("SHOW COLUMNS FROM users");
+  const names = new Set(columns.map((col) => String(col.Field)));
+
+  if (!names.has("failed_login_count")) {
+    await db.query("ALTER TABLE users ADD COLUMN failed_login_count INT NOT NULL DEFAULT 0");
+  }
+  if (!names.has("locked_until")) {
+    await db.query("ALTER TABLE users ADD COLUMN locked_until DATETIME NULL");
+  }
+  if (!names.has("is_active")) {
+    await db.query("ALTER TABLE users ADD COLUMN is_active TINYINT(1) NOT NULL DEFAULT 1");
+  }
+}
 
 export async function ensureCoreTables() {
   for (const statement of ddl) {
     await db.query(statement);
   }
-  for (const statement of followUpDdl) {
-    await db.query(statement);
-  }
+  await ensureUserSecurityColumns();
 }
