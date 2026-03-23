@@ -6,6 +6,9 @@ const ddl = [
     name VARCHAR(120) NOT NULL,
     email VARCHAR(190) NOT NULL UNIQUE,
     password_hash VARCHAR(255) NOT NULL,
+    failed_login_count INT NOT NULL DEFAULT 0,
+    locked_until DATETIME NULL,
+    is_active TINYINT(1) NOT NULL DEFAULT 1,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
   )`,
   `CREATE TABLE IF NOT EXISTS projects (
@@ -137,8 +140,17 @@ const ddl = [
   )`
 ];
 
+const followUpDdl = [
+  "ALTER TABLE users ADD COLUMN IF NOT EXISTS failed_login_count INT NOT NULL DEFAULT 0",
+  "ALTER TABLE users ADD COLUMN IF NOT EXISTS locked_until DATETIME NULL",
+  "ALTER TABLE users ADD COLUMN IF NOT EXISTS is_active TINYINT(1) NOT NULL DEFAULT 1"
+];
+
 export async function ensureCoreTables() {
   for (const statement of ddl) {
+    await db.query(statement);
+  }
+  for (const statement of followUpDdl) {
     await db.query(statement);
   }
 }
