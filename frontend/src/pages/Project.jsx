@@ -1,7 +1,8 @@
 import { startTransition, useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { AIAPI, ClicksAPI, ProductsAPI, ProjectAPI, RequirementsAPI, SearchAPI, VendorsAPI } from "../api/endpoints";
+import { AIAPI, ClicksAPI, ProductsAPI, ProjectAPI, RequirementsAPI, VendorsAPI } from "../api/endpoints";
 import { useAuth } from "../hooks/useAuth";
+import AmbientCanvas from "../components/AmbientCanvas";
 import SiteFooter from "../components/SiteFooter";
 
 const BASE = import.meta.env.VITE_API_BASE || "http://localhost:5000";
@@ -75,6 +76,7 @@ export default function Project() {
   const [shortlistedVendors, setShortlistedVendors] = useState([]);
   const [vendorNotice, setVendorNotice] = useState("");
   const [selectedVendor, setSelectedVendor] = useState(null);
+  const [catalogModal, setCatalogModal] = useState(null);
   const [chat, setChat] = useState({ message: "", reply: "", links: [] });
   const [vision, setVision] = useState({ file: null, result: "" });
   const [pinterestLinks, setPinterestLinks] = useState([]);
@@ -82,11 +84,6 @@ export default function Project() {
   const [reqForm, setReqForm] = useState({ notes: "", must_haves: "", colors: "" });
   const [error, setError] = useState("");
   const [notice, setNotice] = useState("");
-  const [searchInput, setSearchInput] = useState("");
-  const [searchLoading, setSearchLoading] = useState(false);
-  const [searchScope, setSearchScope] = useState("all");
-  const [searchHistory, setSearchHistory] = useState([]);
-  const [searchResults, setSearchResults] = useState({ projects: [], products: [], vendors: [], counts: null });
   const [marketPrefs, setMarketPrefs] = useState({
     store_priority: "ikea,flipkart,myntra,amazon,pepperfry,urbanladder,meesho,ebay",
     exact_only: false
@@ -130,15 +127,6 @@ export default function Project() {
   }, [id]);
 
   useEffect(() => {
-    try {
-      const saved = JSON.parse(localStorage.getItem(`dreamnest_search_history_${id}`) || "[]");
-      setSearchHistory(Array.isArray(saved) ? saved.filter(Boolean).slice(0, 8) : []);
-    } catch {
-      setSearchHistory([]);
-    }
-  }, [id]);
-
-  useEffect(() => {
     if (!project) return;
     const primaryRoom = String(project.room_type || "living_room").split(",").map((s) => s.trim()).filter(Boolean)[0] || "living_room";
     const primaryStyle = Array.isArray(project.style_tags)
@@ -171,35 +159,6 @@ export default function Project() {
         setVendors([]);
       });
       setVendorNotice("Unable to load vendors right now.");
-    }
-  }
-
-  async function runSearch(e) {
-    if (e?.preventDefault) e.preventDefault();
-    const q = searchInput.trim();
-    if (!q) return;
-    setSearchLoading(true);
-    setError("");
-    try {
-      const data = await SearchAPI.query({ q, limit: "6", scope: searchScope, project_id: String(id) }, token);
-      startTransition(() => {
-        setSearchResults({
-          projects: Array.isArray(data.projects) ? data.projects : [],
-          products: Array.isArray(data.products) ? data.products : [],
-          vendors: Array.isArray(data.vendors) ? data.vendors : [],
-          counts: data.counts || null
-        });
-      });
-      const nextHistory = [q, ...searchHistory.filter((item) => item !== q)].slice(0, 8);
-      setSearchHistory(nextHistory);
-      localStorage.setItem(`dreamnest_search_history_${id}`, JSON.stringify(nextHistory));
-    } catch (err) {
-      setError(String(err.message || err));
-      startTransition(() => {
-        setSearchResults({ projects: [], products: [], vendors: [], counts: null });
-      });
-    } finally {
-      setSearchLoading(false);
     }
   }
 
@@ -515,17 +474,20 @@ export default function Project() {
     }
   }
 
-  function clearSearchState() {
-    setSearchInput("");
-    setSearchResults({ projects: [], products: [], vendors: [], counts: null });
-  }
-
   function openVendorModal(vendor) {
     setSelectedVendor(vendor);
   }
 
   function closeVendorModal() {
     setSelectedVendor(null);
+  }
+
+  function openCatalogModal(type) {
+    setCatalogModal(type);
+  }
+
+  function closeCatalogModal() {
+    setCatalogModal(null);
   }
 
   async function viewVendor(vendorId) {
@@ -656,14 +618,6 @@ export default function Project() {
   }
 
   const latestReq = requirements[0] || {};
-  const quickSearchTerms = Array.from(
-    new Set([
-      project?.location_city,
-      ...asArray(project?.room_type).map((item) => item.replaceAll("_", " ")),
-      ...asArray(project?.style_tags).map((item) => item.replaceAll("_", " ")),
-      ...asArray(latestReq?.must_haves)
-    ].filter(Boolean))
-  ).slice(0, 8);
   const stylePreview = asArray(project?.style_tags || "modern, warm").slice(0, 3);
   const colorPreview = asArray(latestReq?.colors || "").slice(0, 4);
   const conceptBoards = stylePreview.map((style, idx) => ({
@@ -719,6 +673,8 @@ export default function Project() {
   const checklistPct = checklist.length ? Math.round((doneChecklist / checklist.length) * 100) : 0;
   const timelineDone = timeline.filter((t) => (timelineMap[t.id]?.status || "todo") === "done").length;
   const timelinePct = timeline.length ? Math.round((timelineDone / timeline.length) * 100) : 0;
+  const productPreview = liveProducts.slice(0, 3);
+  const vendorPreview = vendors.slice(0, 3);
 
   if (!token) {
     return (
@@ -740,8 +696,8 @@ export default function Project() {
   }
 
   return (
-    <div className="container studio-page">
-      <div className="nav studio-nav">
+    <div className="container studio-page workspace-shell">
+      <div className="nav studio-nav workspace-nav">
         <div className="nav-brand">
           <span style={{ color: "var(--accent)" }}>Dream</span>Nest AI
         </div>
@@ -767,7 +723,8 @@ export default function Project() {
         </div>
       </div>
 
-      <div className="card studio-header-band">
+      <div className="card studio-header-band ambient-panel workspace-hero-band">
+        <AmbientCanvas variant="gold" />
         <div>
           <div className="studio-kicker">Project Design Board</div>
           <h2>{project.title}</h2>
@@ -791,8 +748,91 @@ export default function Project() {
         </div>
       </div>
 
+      <div className="grid grid-2" style={{ marginTop: 22, alignItems: "start" }}>
+        <div className="glass-stack sourcing-preview-card workspace-panel ambient-panel">
+          <AmbientCanvas variant="green" />
+          <div className="section-head-row">
+            <div>
+              <h3 style={{ fontFamily: "var(--font-display)", margin: 0 }}>Recommended products</h3>
+              <div className="muted">Keep the page compact here. Open the full sourcing board only when you need it.</div>
+            </div>
+            <button className="btn btn-outline" type="button" onClick={() => openCatalogModal("products")}>
+              View all
+            </button>
+          </div>
+          <div className="sourcing-preview-list">
+            {productPreview.map((p, idx) => (
+              <div key={`${p.product_url}-${idx}`} className="sourcing-preview-item">
+                {p.image_url && (
+                  <img
+                    src={p.image_url}
+                    alt={p.title}
+                    loading="lazy"
+                    decoding="async"
+                    className="sourcing-preview-thumb"
+                  />
+                )}
+                <div className="sourcing-preview-copy">
+                  <strong>{p.title}</strong>
+                  <span>{p.currency} {p.price || "-"}</span>
+                  <span>{storeNameFromUrl(p.product_url)} - {p.recommended_for || "Project fit"}</span>
+                </div>
+                <a className="btn btn-outline" href={normalizeUrl(p.product_url)} target="_blank" rel="noreferrer">
+                  Open
+                </a>
+              </div>
+            ))}
+            {!productPreview.length && !liveLoading && (
+              <div className="retrieval-item static">
+                <strong>No product recommendations yet</strong>
+                <span>Run AI planning or use live product links. Full results will open in the sourcing board.</span>
+              </div>
+            )}
+            {liveLoading && (
+              <div className="retrieval-item static">
+                <strong>Loading sourcing board</strong>
+                <span>Fetching live marketplace links for this project.</span>
+              </div>
+            )}
+          </div>
+        </div>
+
+        <div className="glass-stack sourcing-preview-card workspace-panel ambient-panel">
+          <AmbientCanvas variant="green" />
+          <div className="section-head-row">
+            <div>
+              <h3 style={{ fontFamily: "var(--font-display)", margin: 0 }}>Local vendors</h3>
+              <div className="muted">Show the strongest matches here, then browse the full vendor board in a popup.</div>
+            </div>
+            <button className="btn btn-outline" type="button" onClick={() => openCatalogModal("vendors")}>
+              View all
+            </button>
+          </div>
+          <div className="sourcing-preview-list">
+            {vendorPreview.map((v) => (
+              <div key={v.id} className="sourcing-preview-item">
+                <div className="sourcing-preview-copy">
+                  <strong>{v.name}</strong>
+                  <span>{v.city} - {v.years_exp || 0} yrs - Rating {v.avg_rating || "-"}</span>
+                  <span>{v.external ? "Live vendor" : "DreamNest vendor"}</span>
+                </div>
+                <button className="btn btn-outline" type="button" onClick={() => openVendorModal(v)}>
+                  View
+                </button>
+              </div>
+            ))}
+            {!vendorPreview.length && (
+              <div className="retrieval-item static">
+                <strong>No vendors loaded yet</strong>
+                <span>{vendorNotice || `No vendor preview available for ${project.location_city} right now.`}</span>
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+
       <div className="grid grid-2" style={{ marginTop: 22 }}>
-        <div className="glass-stack">
+        <div className="glass-stack workspace-panel">
           <div style={{ fontFamily: "var(--font-display)", fontSize: 22 }}>{project.title}</div>
           <div className="muted">
             {project.room_type} - {project.location_city} - {project.area_sqft} sqft - Budget INR {project.budget_inr}
@@ -810,123 +850,7 @@ export default function Project() {
               </div>
             </div>
           )}
-        </div>
-
-        <div className="glass-stack">
-          <h3 style={{ fontFamily: "var(--font-display)" }}>Data Retrieval</h3>
-          <div className="muted">Search this workspace for matching projects, products, and vendors by room, city, style, or service.</div>
-          <form onSubmit={runSearch} className="grid" style={{ marginTop: 12 }}>
-            <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
-              <input
-                className="input"
-                placeholder="Search project data"
-                value={searchInput}
-                onChange={(e) => setSearchInput(e.target.value)}
-              />
-              <button className="btn btn-accent2" type="submit">
-                {searchLoading ? "Searching..." : "Retrieve"}
-              </button>
-              <button className="btn btn-outline" type="button" onClick={clearSearchState}>
-                Clear
-              </button>
-            </div>
-          </form>
-          <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginTop: 12 }}>
-            {["all", "projects", "products", "vendors"].map((scope) => (
-              <button
-                key={scope}
-                type="button"
-                className={`btn ${searchScope === scope ? "" : "btn-outline"}`}
-                onClick={() => setSearchScope(scope)}
-              >
-                {scope[0].toUpperCase() + scope.slice(1)}
-              </button>
-            ))}
-          </div>
-          {quickSearchTerms.length > 0 && (
-            <div style={{ marginTop: 12 }}>
-              <div className="muted" style={{ marginBottom: 6 }}>Quick suggestions</div>
-              <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-                {quickSearchTerms.map((term) => (
-                  <button
-                    key={term}
-                    type="button"
-                    className="btn btn-outline"
-                    onClick={() => setSearchInput(term)}
-                  >
-                    {term}
-                  </button>
-                ))}
-              </div>
-            </div>
-          )}
-          {searchHistory.length > 0 && (
-            <div style={{ marginTop: 12 }}>
-              <div className="muted" style={{ marginBottom: 6 }}>Recent searches</div>
-              <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-                {searchHistory.map((term) => (
-                  <button
-                    key={term}
-                    type="button"
-                    className="btn btn-outline"
-                    onClick={() => setSearchInput(term)}
-                  >
-                    {term}
-                  </button>
-                ))}
-              </div>
-            </div>
-          )}
-          {searchResults.counts && (
-            <div className="stats-grid" style={{ marginTop: 12 }}>
-              <div className="stat-card">
-                <div className="muted">Projects</div>
-                <div className="stat-number">{searchResults.counts.projects}</div>
-              </div>
-              <div className="stat-card">
-                <div className="muted">Products</div>
-                <div className="stat-number">{searchResults.counts.products}</div>
-              </div>
-              <div className="stat-card">
-                <div className="muted">Vendors</div>
-                <div className="stat-number">{searchResults.counts.vendors}</div>
-              </div>
-            </div>
-          )}
-          {searchResults.counts && searchResults.counts.projects === 0 && searchResults.counts.products === 0 && searchResults.counts.vendors === 0 && (
-            <div className="muted" style={{ marginTop: 12 }}>No matching data found for this query.</div>
-          )}
-          {(searchResults.projects.length > 0 || searchResults.products.length > 0 || searchResults.vendors.length > 0) && (
-            <div className="retrieval-stack">
-              {searchResults.projects.slice(0, 2).map((p) => (
-                <button key={`search-project-${p.id}`} className="retrieval-item" type="button" onClick={() => nav(`/project/${p.id}`)}>
-                  <strong>{p.title}</strong>
-                  <span>{p.room_type} • {p.location_city}</span>
-                </button>
-              ))}
-              {searchResults.products.slice(0, 2).map((p) => (
-                <a
-                  key={`search-product-${p.id}`}
-                  className="retrieval-item"
-                  href={p.product_url ? normalizeUrl(p.product_url) : "#"}
-                  target="_blank"
-                  rel="noreferrer"
-                >
-                  <strong>{p.name}</strong>
-                  <span>{p.category} • {p.style} • INR {p.price_inr || "-"}</span>
-                </a>
-              ))}
-              {searchResults.vendors.slice(0, 2).map((v) => (
-                <a key={`search-vendor-${v.id}`} className="retrieval-item" href={`/vendor/${v.id}`}>
-                  <strong>{v.name}</strong>
-                  <span>{v.city} • {(v.service_types || []).join(", ")}</span>
-                </a>
-              ))}
-            </div>
-          )}
-        </div>
-
-        <div className="glass-stack">
+        </div>        <div className="glass-stack workspace-panel">
           <h3 style={{ fontFamily: "var(--font-display)" }}>Requirements</h3>
           <form onSubmit={addRequirements} className="grid">
             <textarea className="textarea" placeholder="Notes" value={reqForm.notes} onChange={(e) => setReqForm({ ...reqForm, notes: e.target.value })} />
@@ -945,7 +869,8 @@ export default function Project() {
           </div>
         </div>
 
-        <div className="glass-stack">
+        <div className="glass-stack workspace-panel ambient-panel">
+          <AmbientCanvas variant="green" />
           <h3 style={{ fontFamily: "var(--font-display)" }}>AI planning</h3>
           <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
             <button className="btn" onClick={runPlan}>Generate budget split + queries</button>
@@ -1139,85 +1064,6 @@ export default function Project() {
         </div>
       </div>
 
-      <div className="grid grid-2" style={{ marginTop: 22 }}>
-        <div className="glass-stack">
-          <h3 style={{ fontFamily: "var(--font-display)" }}>Recommended products</h3>
-          <div className="grid">
-            {liveProducts.map((p, idx) => (
-              <div key={`${p.product_url}-${idx}`} className="card" style={{ boxShadow: "none" }}>
-                {p.image_url && <img src={p.image_url} alt={p.title} loading="lazy" decoding="async" style={{ width: "100%", borderRadius: 12 }} />}
-                <div style={{ fontFamily: "var(--font-display)", marginTop: 8 }}>{p.title}</div>
-                {p.recommended_for && <div className="muted">For: {p.recommended_for}</div>}
-                <div className="muted">{p.currency} {p.price || "-"}</div>
-                <div className="muted">Store: {storeNameFromUrl(p.product_url)}</div>
-                <div className="muted" style={{ wordBreak: "break-all" }}>Product link: {normalizeUrl(p.product_url)}</div>
-                <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-                  <button className="btn btn-outline" onClick={() => trackClick(p)}>Buy now</button>
-                  <a className="btn btn-outline" href={normalizeUrl(p.product_url)} target="_blank" rel="noreferrer">Open link</a>
-                </div>
-              </div>
-            ))}
-            {!liveProducts.length && !liveLoading && (
-              <div className="muted">No recommendations yet. Click "Find live product links" or run AI planning.</div>
-            )}
-            {liveLoading && <div className="muted">Fetching exact product recommendations...</div>}
-          </div>
-        </div>
-
-        <div className="glass-stack">
-          <h3 style={{ fontFamily: "var(--font-display)" }}>Local vendors</h3>
-          <div className="grid">
-            {vendors.map((v) => (
-              <div key={v.id} className="card" style={{ boxShadow: "none" }}>
-                <div style={{ fontFamily: "var(--font-display)" }}>{v.name}</div>
-                <div className="muted">{v.city} - {v.years_exp} yrs</div>
-                <div className="muted">Rating {v.avg_rating || "-"} ({v.review_count || 0})</div>
-                {v.external && <div className="badge">Live vendor</div>}
-                <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-                  <button className="btn btn-outline" type="button" onClick={() => openVendorModal(v)}>
-                    View more
-                  </button>
-                  {v.external ? (
-                    <>
-                      {(v.phone || v.whatsapp) && (
-                        <a className="btn btn-outline" href={toPhoneUrl(v.phone || v.whatsapp)}>
-                          Call
-                        </a>
-                      )}
-                      {(v.whatsapp || v.phone) && (
-                        <a className="btn btn-outline" href={toWhatsappUrl(v.whatsapp || v.phone)} target="_blank" rel="noreferrer">
-                          WhatsApp
-                        </a>
-                      )}
-                      <a
-                        className="btn btn-outline"
-                        href={normalizeUrl(v.maps_url || `https://www.google.com/maps/search/${encodeURIComponent(`${v.name} ${v.city || ""}`)}`)}
-                        target="_blank"
-                        rel="noreferrer"
-                      >
-                        Open on maps
-                      </a>
-                    </>
-                  ) : (
-                    <>
-                      <button className="btn btn-outline" onClick={() => viewVendor(v.id)}>Mark viewed</button>
-                      <button className="btn" onClick={() => shortlistVendor(v.id)}>Shortlist vendor</button>
-                    </>
-                  )}
-                </div>
-                {v.website && (
-                  <a className="btn btn-outline" href={normalizeUrl(v.website)} target="_blank" rel="noreferrer">
-                    Visit site
-                  </a>
-                )}
-              </div>
-            ))}
-            {!vendors.length && <div className="muted">No vendors available yet.</div>}
-            {vendorNotice && <div className="muted">{vendorNotice}</div>}
-          </div>
-        </div>
-      </div>
-
       <div className="glass-stack" style={{ marginTop: 22 }}>
         <h3 style={{ fontFamily: "var(--font-display)" }}>Shortlisted vendors</h3>
         <div className="grid">
@@ -1332,6 +1178,108 @@ export default function Project() {
         </div>
       )}
 
+      {catalogModal === "products" && (
+        <div className="preview-modal-overlay" onClick={closeCatalogModal}>
+          <div className="preview-modal catalog-modal" onClick={(e) => e.stopPropagation()}>
+            <div className="preview-head">
+              <span>Recommended products</span>
+              <button className="btn btn-outline" type="button" onClick={closeCatalogModal}>Close</button>
+            </div>
+            <div className="catalog-grid">
+              {liveProducts.map((p, idx) => (
+                <div key={`${p.product_url}-${idx}`} className="card" style={{ boxShadow: "none" }}>
+                  {p.image_url && <img src={p.image_url} alt={p.title} loading="lazy" decoding="async" style={{ width: "100%", borderRadius: 12, aspectRatio: "4 / 3", objectFit: "cover" }} />}
+                  <div style={{ fontFamily: "var(--font-display)", marginTop: 8 }}>{p.title}</div>
+                  {p.recommended_for && <div className="muted">For: {p.recommended_for}</div>}
+                  <div className="muted">{p.currency} {p.price || "-"}</div>
+                  <div className="muted">Store: {storeNameFromUrl(p.product_url)}</div>
+                  <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginTop: 8 }}>
+                    <button className="btn btn-outline" type="button" onClick={() => trackClick(p)}>Buy now</button>
+                    <a className="btn btn-outline" href={normalizeUrl(p.product_url)} target="_blank" rel="noreferrer">Open link</a>
+                  </div>
+                </div>
+              ))}
+              {!liveProducts.length && !liveLoading && (
+                <div className="retrieval-item static">
+                  <strong>No recommendations yet</strong>
+                  <span>Run AI planning or fetch live product links first.</span>
+                </div>
+              )}
+              {liveLoading && (
+                <div className="retrieval-item static">
+                  <strong>Loading products</strong>
+                  <span>Fetching live marketplace links.</span>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {catalogModal === "vendors" && (
+        <div className="preview-modal-overlay" onClick={closeCatalogModal}>
+          <div className="preview-modal catalog-modal vendor-board-modal" onClick={(e) => e.stopPropagation()}>
+            <div className="preview-head">
+              <span>Local vendors</span>
+              <button className="btn btn-outline" type="button" onClick={closeCatalogModal}>Close</button>
+            </div>
+            <div className="catalog-grid">
+              {vendors.map((v) => (
+                <div key={v.id} className="card" style={{ boxShadow: "none" }}>
+                  <div style={{ fontFamily: "var(--font-display)" }}>{v.name}</div>
+                  <div className="muted">{v.city} - {v.years_exp || 0} yrs</div>
+                  <div className="muted">Rating {v.avg_rating || "-"} ({v.review_count || 0})</div>
+                  {v.external && <div className="badge">Live vendor</div>}
+                  <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginTop: 10 }}>
+                    <button className="btn btn-outline" type="button" onClick={() => openVendorModal(v)}>
+                      View more
+                    </button>
+                    {v.external ? (
+                      <>
+                        {(v.phone || v.whatsapp) && (
+                          <a className="btn btn-outline" href={toPhoneUrl(v.phone || v.whatsapp)}>
+                            Call
+                          </a>
+                        )}
+                        {(v.whatsapp || v.phone) && (
+                          <a className="btn btn-outline" href={toWhatsappUrl(v.whatsapp || v.phone)} target="_blank" rel="noreferrer">
+                            WhatsApp
+                          </a>
+                        )}
+                        <a
+                          className="btn btn-outline"
+                          href={normalizeUrl(v.maps_url || `https://www.google.com/maps/search/${encodeURIComponent(`${v.name} ${v.city || ""}`)}`)}
+                          target="_blank"
+                          rel="noreferrer"
+                        >
+                          Open on maps
+                        </a>
+                      </>
+                    ) : (
+                      <>
+                        <button className="btn btn-outline" type="button" onClick={() => viewVendor(v.id)}>Mark viewed</button>
+                        <button className="btn" type="button" onClick={() => shortlistVendor(v.id)}>Shortlist vendor</button>
+                      </>
+                    )}
+                    {v.website && (
+                      <a className="btn btn-outline" href={normalizeUrl(v.website)} target="_blank" rel="noreferrer">
+                        Visit site
+                      </a>
+                    )}
+                  </div>
+                </div>
+              ))}
+              {!vendors.length && (
+                <div className="retrieval-item static">
+                  <strong>No vendors available yet</strong>
+                  <span>{vendorNotice || "No local vendor data available right now."}</span>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
       <div className="grid grid-2" style={{ marginTop: 22 }}>
         <div className="glass-stack">
           <h3 style={{ fontFamily: "var(--font-display)" }}>Chatbot</h3>
@@ -1385,3 +1333,4 @@ export default function Project() {
     </div>
   );
 }
+

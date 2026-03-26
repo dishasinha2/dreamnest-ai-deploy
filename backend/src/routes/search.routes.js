@@ -21,6 +21,16 @@ function safeJsonArray(value) {
   }
 }
 
+function buildSearchForms(query) {
+  const base = String(query || "").trim().toLowerCase();
+  const forms = new Set([base]);
+  if (!base) return [];
+  forms.add(base.replace(/\s+/g, "_"));
+  forms.add(base.replace(/\s+/g, "-"));
+  forms.add(base.replace(/[_-]+/g, " "));
+  return Array.from(forms).filter(Boolean);
+}
+
 searchRoutes.get("/", auth, async (req, res) => {
   const q = String(req.query.q || "").trim();
   const limitRaw = Number(req.query.limit);
@@ -35,9 +45,83 @@ searchRoutes.get("/", auth, async (req, res) => {
     return res.status(400).json({ error: "scope must be one of all, projects, products, vendors" });
   }
 
-  const like = `%${q}%`;
-  const prefix = `${q}%`;
-  const exact = q;
+  const forms = buildSearchForms(q);
+  const primary = forms[0] || q;
+  const like = `%${primary}%`;
+  const prefix = `${primary}%`;
+  const exact = primary;
+  const altLikeValues = forms.slice(1).map((value) => `%${value}%`);
+  const projectSearchSql = `
+      SELECT id, title, room_type, location_city, budget_inr, style_tags, created_at
+      FROM projects
+      WHERE user_id=?
+        AND (
+          title LIKE ?
+          OR room_type LIKE ?
+          OR location_city LIKE ?
+          ${altLikeValues.map(() => "OR title LIKE ? OR room_type LIKE ? OR location_city LIKE ?").join(" ")}
+        )
+      ORDER BY
+        (title = ?) DESC,
+        (title LIKE ?) DESC,
+        created_at DESC
+      LIMIT ?`;
+  const productSearchSql = `
+      SELECT id, name, category, room_type, style, price_inr, product_url, image_url, source
+      FROM products
+      WHERE is_active=1
+        AND (
+          name LIKE ?
+          OR category LIKE ?
+          OR room_type LIKE ?
+          OR style LIKE ?
+          OR tags LIKE ?
+          ${altLikeValues.map(() => "OR name LIKE ? OR category LIKE ? OR room_type LIKE ? OR style LIKE ? OR tags LIKE ?").join(" ")}
+        )
+      ORDER BY
+        (name = ?) DESC,
+        (name LIKE ?) DESC,
+        created_at DESC
+      LIMIT ?`;
+  const vendorSearchSql = `
+      SELECT v.id, v.name, v.city, v.service_types, v.website, v.years_exp,
+          (SELECT ROUND(AVG(r.rating),1) FROM vendor_reviews r WHERE r.vendor_id=v.id) AS avg_rating,
+          (SELECT COUNT(*) FROM vendor_reviews r WHERE r.vendor_id=v.id) AS review_count
+       FROM vendors v
+       WHERE
+         v.name LIKE ?
+         OR v.city LIKE ?
+         OR v.service_types LIKE ?
+         OR v.about LIKE ?
+         ${altLikeValues.map(() => "OR v.name LIKE ? OR v.city LIKE ? OR v.service_types LIKE ? OR v.about LIKE ?").join(" ")}
+       ORDER BY
+         (v.name = ?) DESC,
+         (v.name LIKE ?) DESC,
+         avg_rating DESC,
+         v.created_at DESC
+       LIMIT ?`;
+  const projectParams = [
+    req.user.userId,
+    like, like, like,
+    ...altLikeValues.flatMap((value) => [value, value, value]),
+    exact,
+    prefix,
+    limit
+  ];
+  const productParams = [
+    like, like, like, like, like,
+    ...altLikeValues.flatMap((value) => [value, value, value, value, value]),
+    exact,
+    prefix,
+    limit
+  ];
+  const vendorParams = [
+    like, like, like, like,
+    ...altLikeValues.flatMap((value) => [value, value, value, value]),
+    exact,
+    prefix,
+    limit
+  ];
   let projectContext = null;
 
   if (Number.isFinite(projectId) && projectId > 0) {
@@ -62,62 +146,13 @@ searchRoutes.get("/", auth, async (req, res) => {
 
   const [projects, products, vendors] = await Promise.all([
     shouldFetchProjects
-      ? db.execute(
-      `SELECT id, title, room_type, location_city, budget_inr, style_tags, created_at
-       FROM projects
-       WHERE user_id=?
-         AND (
-           title LIKE ?
-           OR room_type LIKE ?
-           OR location_city LIKE ?
-         )
-       ORDER BY
-         (title = ?) DESC,
-         (title LIKE ?) DESC,
-         created_at DESC
-       LIMIT ?`,
-      [req.user.userId, like, like, like, exact, prefix, limit]
-    )
+      ? db.query(projectSearchSql, projectParams)
       : Promise.resolve([[]]),
     shouldFetchProducts
-      ? db.execute(
-      `SELECT id, name, category, room_type, style, price_inr, product_url, image_url, source
-       FROM products
-       WHERE is_active=1
-         AND (
-           name LIKE ?
-           OR category LIKE ?
-           OR room_type LIKE ?
-           OR style LIKE ?
-           OR tags LIKE ?
-         )
-       ORDER BY
-         (name = ?) DESC,
-         (name LIKE ?) DESC,
-         created_at DESC
-       LIMIT ?`,
-      [like, like, like, like, like, exact, prefix, limit]
-    )
+      ? db.query(productSearchSql, productParams)
       : Promise.resolve([[]]),
     shouldFetchVendors
-      ? db.execute(
-      `SELECT v.id, v.name, v.city, v.service_types, v.website, v.years_exp,
-          (SELECT ROUND(AVG(r.rating),1) FROM vendor_reviews r WHERE r.vendor_id=v.id) AS avg_rating,
-          (SELECT COUNT(*) FROM vendor_reviews r WHERE r.vendor_id=v.id) AS review_count
-       FROM vendors v
-       WHERE
-         v.name LIKE ?
-         OR v.city LIKE ?
-         OR v.service_types LIKE ?
-         OR v.about LIKE ?
-       ORDER BY
-         (v.name = ?) DESC,
-         (v.name LIKE ?) DESC,
-         avg_rating DESC,
-         v.created_at DESC
-       LIMIT ?`,
-      [like, like, like, like, exact, prefix, limit]
-    )
+      ? db.query(vendorSearchSql, vendorParams)
       : Promise.resolve([[]])
   ]);
 

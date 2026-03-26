@@ -2,6 +2,7 @@ import { startTransition, useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { AIAPI, ProjectAPI, AuthAPI, SearchAPI } from "../api/endpoints";
 import { useAuth } from "../hooks/useAuth";
+import AmbientCanvas from "../components/AmbientCanvas";
 import SiteFooter from "../components/SiteFooter";
 
 const IMAGE_FALLBACK = "https://images.unsplash.com/photo-1493663284031-b7e3aefcae8e?q=80&w=1200&auto=format&fit=crop";
@@ -77,10 +78,10 @@ export default function Dashboard() {
   const [form, setForm] = useState({
     title: "",
     room_type: "living_room",
-    budget_inr: 600000,
+    budget_inr: 0,
     style_tags: "modern,warm",
     location_city: "",
-    area_sqft: 300
+    area_sqft: 0
   });
   const [step, setStep] = useState(0);
 
@@ -296,8 +297,8 @@ export default function Dashboard() {
   }
 
   return (
-    <div className="container studio-page">
-      <div className="nav studio-nav">
+    <div className="container studio-page workspace-shell">
+      <div className="nav studio-nav workspace-nav">
         <div className="nav-brand">
           <span style={{ color: "var(--accent)" }}>Dream</span>Nest AI
           <div className="nav-sub">Welcome{userName ? `, ${userName}` : ""}</div>
@@ -324,7 +325,8 @@ export default function Dashboard() {
         </div>
       </div>
 
-      <div className="card studio-header-band">
+      <div className="card studio-header-band ambient-panel workspace-hero-band">
+        <AmbientCanvas variant="gold" />
         <div>
           <div className="studio-kicker">Interior Designer Workspace</div>
           <h2>Plan rooms like a design studio, not a form wizard</h2>
@@ -348,7 +350,7 @@ export default function Dashboard() {
 
       <div className="dash-wrap">
         <aside className="dash-side">
-          <div className="card studio-side-card">
+          <div className="card studio-side-card workspace-panel">
             <div className="panel-title">Project Snapshot</div>
             <div className="muted">Track the current brief without splitting attention away from the wizard.</div>
             <div className="stats-grid">
@@ -387,7 +389,7 @@ export default function Dashboard() {
               </div>
             )}
           </div>
-          <div className="card studio-side-card" style={{ marginTop: 12 }}>
+          <div className="card studio-side-card workspace-panel" style={{ marginTop: 12 }}>
             <div className="panel-title">Data Retrieval</div>
             <div className="muted">Search projects, products, and vendors from one compact panel.</div>
             <form onSubmit={runSearch} className="grid" style={{ marginTop: 12 }}>
@@ -417,18 +419,29 @@ export default function Dashboard() {
                 </div>
               </div>
             )}
+            {error && searchInput.trim() && (
+              <div className="form-error" style={{ marginTop: 12 }}>{error}</div>
+            )}
+            {searchResults.counts &&
+              searchResults.counts.projects === 0 &&
+              searchResults.counts.products === 0 &&
+              searchResults.counts.vendors === 0 && (
+                <div className="muted" style={{ marginTop: 12 }}>
+                  No matching results found. Try `living_room`, `modern`, `sofa`, or your city name.
+                </div>
+              )}
             {(searchResults.projects.length > 0 || searchResults.products.length > 0 || searchResults.vendors.length > 0) && (
               <div className="retrieval-stack">
                 {searchResults.projects.slice(0, 2).map((p) => (
                   <button key={`project-${p.id}`} className="retrieval-item" onClick={() => nav(`/project/${p.id}`)} type="button">
                     <strong>{p.title}</strong>
-                    <span>{p.room_type} • {p.location_city}</span>
+                    <span>{p.room_type} - {p.location_city}</span>
                   </button>
                 ))}
                 {searchResults.products.slice(0, 2).map((p) => (
                   <div key={`product-${p.id}`} className="retrieval-item static">
                     <strong>{p.name}</strong>
-                    <span>{p.category} • {p.style}</span>
+                    <span>{p.category} - {p.style}</span>
                   </div>
                 ))}
                 {searchResults.vendors.slice(0, 2).map((v) => (
@@ -440,7 +453,7 @@ export default function Dashboard() {
               </div>
             )}
           </div>
-          <div className="card studio-side-card" style={{ marginTop: 12 }}>
+          <div className="card studio-side-card workspace-panel" style={{ marginTop: 12 }}>
             <div className="panel-title">Your projects</div>
             <div className="grid" style={{ marginTop: 10 }}>
               {projects.map((p) => (
@@ -463,7 +476,8 @@ export default function Dashboard() {
         </aside>
 
         <div className="dash-main">
-          <div className="card studio-main-card wizard-card">
+          <div className="card studio-main-card wizard-card ambient-panel workspace-feature-card">
+            <AmbientCanvas variant="green" />
             <h3 style={{ fontFamily: "var(--font-display)" }}>Design Brief Wizard</h3>
             <p className="muted">The main control surface for room type, style, and budget planning.</p>
             <div className="wizard-meta">
@@ -769,4 +783,5 @@ export default function Dashboard() {
     </div>
   );
 }
+
 

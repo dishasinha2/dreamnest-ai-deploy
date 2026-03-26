@@ -10,6 +10,7 @@ export default function Auth() {
   const [form, setForm] = useState({ name: "", email: "", password: "", confirmPassword: "" });
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const [touched, setTouched] = useState({});
 
   const passwordChecks = [
     { label: "10+ characters", valid: form.password.length >= 10 },
@@ -19,19 +20,23 @@ export default function Auth() {
     { label: "Special character", valid: /[^A-Za-z0-9]/.test(form.password) }
   ];
 
-  function validateForm() {
+  function getFieldErrors() {
     const email = form.email.trim().toLowerCase();
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return "Enter a valid email address.";
-    if (!form.password) return "Enter your password.";
+    const next = {};
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) next.email = "Use a full email address like name@gmail.com.";
+    if (!form.password) next.password = "Enter your password.";
     if (mode === "register") {
-      if (form.name.trim().length < 2) return "Enter your full name.";
+      if (form.name.trim().length < 2) next.name = "Enter your full name.";
       if (passwordChecks.some((check) => !check.valid)) {
-        return "Password must be stronger before you create an account.";
+        next.password = "Password must be stronger before you create an account.";
       }
-      if (form.password !== form.confirmPassword) return "Passwords do not match.";
+      if (!form.confirmPassword) next.confirmPassword = "Confirm your password.";
+      else if (form.password !== form.confirmPassword) next.confirmPassword = "Passwords do not match.";
     }
-    return "";
+    return next;
   }
+
+  const fieldErrors = getFieldErrors();
 
   useEffect(() => {
     if (token) nav("/dashboard");
@@ -39,9 +44,14 @@ export default function Auth() {
 
   async function submit(e) {
     e.preventDefault();
-    const validationError = validateForm();
-    setError(validationError);
-    if (validationError) return;
+    setTouched({
+      name: true,
+      email: true,
+      password: true,
+      confirmPassword: true
+    });
+    setError("");
+    if (Object.keys(fieldErrors).length) return;
     setLoading(true);
     try {
       const payload = {
@@ -87,8 +97,10 @@ export default function Auth() {
                   placeholder="Full name"
                   autoComplete="name"
                   value={form.name}
+                  onBlur={() => setTouched((prev) => ({ ...prev, name: true }))}
                   onChange={(e) => setForm({ ...form, name: e.target.value })}
                 />
+                {touched.name && fieldErrors.name && <div className="form-error">{fieldErrors.name}</div>}
               </>
             )}
             <input
@@ -97,16 +109,24 @@ export default function Auth() {
               type="email"
               autoComplete="email"
               value={form.email}
+              onBlur={() => setTouched((prev) => ({ ...prev, email: true }))}
               onChange={(e) => setForm({ ...form, email: e.target.value })}
             />
+            {touched.email && fieldErrors.email ? (
+              <div className="form-error">{fieldErrors.email}</div>
+            ) : (
+              mode === "register" && <div className="form-help">Use your full email, for example `name@gmail.com`.</div>
+            )}
             <input
               className="input"
               placeholder={mode === "register" ? "Strong password" : "Password"}
               type="password"
               autoComplete={mode === "register" ? "new-password" : "current-password"}
               value={form.password}
+              onBlur={() => setTouched((prev) => ({ ...prev, password: true }))}
               onChange={(e) => setForm({ ...form, password: e.target.value })}
             />
+            {touched.password && fieldErrors.password && <div className="form-error">{fieldErrors.password}</div>}
             {mode === "register" && (
               <>
                 <input
@@ -115,8 +135,10 @@ export default function Auth() {
                   type="password"
                   autoComplete="new-password"
                   value={form.confirmPassword}
+                  onBlur={() => setTouched((prev) => ({ ...prev, confirmPassword: true }))}
                   onChange={(e) => setForm({ ...form, confirmPassword: e.target.value })}
                 />
+                {touched.confirmPassword && fieldErrors.confirmPassword && <div className="form-error">{fieldErrors.confirmPassword}</div>}
                 <div className="glass-panel" style={{ padding: 14 }}>
                   <div className="panel-title" style={{ fontSize: 18 }}>Password strength</div>
                   <div className="grid" style={{ gap: 8, marginTop: 8 }}>
@@ -129,7 +151,7 @@ export default function Auth() {
                 </div>
               </>
             )}
-            {error && <div className="muted">{error}</div>}
+            {error && <div className="form-error">{error}</div>}
             <button className="btn btn-accent2" type="submit" disabled={loading}>
               {loading ? "Please wait..." : mode === "register" ? "Create account" : "Log in"}
             </button>
@@ -140,6 +162,7 @@ export default function Auth() {
               onClick={() => {
                 setMode(mode === "register" ? "login" : "register");
                 setError("");
+                setTouched({});
                 setForm({ name: "", email: form.email, password: "", confirmPassword: "" });
               }}
             >
