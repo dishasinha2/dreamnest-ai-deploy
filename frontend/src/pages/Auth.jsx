@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import { AuthAPI } from "../api/endpoints";
+import { warmApi } from "../api/client";
 import SiteFooter from "../components/SiteFooter";
 import { useAuth } from "../hooks/useAuth";
 
@@ -43,6 +44,10 @@ export default function Auth() {
   useEffect(() => {
     if (token) nav("/dashboard");
   }, [token, nav]);
+
+  useEffect(() => {
+    warmApi();
+  }, []);
 
   async function submit(e) {
     e.preventDefault();

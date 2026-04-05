@@ -1,8 +1,8 @@
 import { api } from "./client";
 
 export const AuthAPI = {
-  register: (payload) => api("/api/auth/register", { method: "POST", body: payload }),
-  login: (payload) => api("/api/auth/login", { method: "POST", body: payload }),
+  register: (payload) => api("/api/auth/register", { method: "POST", body: payload, timeoutMs: 60000 }),
+  login: (payload) => api("/api/auth/login", { method: "POST", body: payload, timeoutMs: 60000 }),
   me: (token) => api("/api/auth/me", { token })
 };
 

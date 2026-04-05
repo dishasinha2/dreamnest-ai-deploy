@@ -1,11 +1,11 @@
 const BASE = import.meta.env.VITE_API_BASE || "http://localhost:5000";
 
-export async function api(path, { method="GET", token, body, isForm, headers: extraHeaders } = {}) {
+export async function api(path, { method="GET", token, body, isForm, headers: extraHeaders, timeoutMs = 25000 } = {}) {
   const headers = { ...(extraHeaders || {}) };
   if (token) headers.Authorization = `Bearer ${token}`;
   if (!isForm) headers["Content-Type"] = "application/json";
   const controller = new AbortController();
-  const timer = setTimeout(() => controller.abort(), 25000);
+  const timer = setTimeout(() => controller.abort(), timeoutMs);
 
   let res;
   try {
@@ -33,4 +33,12 @@ export async function api(path, { method="GET", token, body, isForm, headers: ex
     throw new Error(t || `Request failed (${res.status})`);
   }
   return res.json();
+}
+
+export async function warmApi() {
+  try {
+    await fetch(`${BASE}/api/health`, { cache: "no-store" });
+  } catch {
+    // Ignore warm-up failures. Real requests will surface actionable errors.
+  }
 }
