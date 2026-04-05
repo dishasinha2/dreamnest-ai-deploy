@@ -1,5 +1,6 @@
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+﻿import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { Suspense, lazy, startTransition, useEffect, useState } from "react";
+import InteriorBackdrop from "./components/InteriorBackdrop";
 
 const Landing = lazy(() => import("./pages/Landing.jsx"));
 const Auth = lazy(() => import("./pages/Auth.jsx"));
@@ -63,7 +64,8 @@ export default function App() {
 
   return (
     <BrowserRouter>
-      <div className="bg-atmos grid-veil">
+      <div className="bg-atmos grid-veil app-scene-shell">
+        <InteriorBackdrop />
         <div className="device-toggle">
           <button
             className={`btn btn-outline ${!isNarrowViewport && preferredDeviceMode === "laptop" ? "is-active" : ""}`}

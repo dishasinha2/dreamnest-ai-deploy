@@ -1,6 +1,8 @@
 import { useEffect, useState } from "react";
+import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import { AuthAPI } from "../api/endpoints";
+import SiteFooter from "../components/SiteFooter";
 import { useAuth } from "../hooks/useAuth";
 
 export default function Auth() {
@@ -78,18 +80,54 @@ export default function Auth() {
   }
 
   return (
-    <div className="container">
-      <div className="auth-wrap">
-        <div className="glass-stack">
-          <h2 style={{ fontFamily: "var(--font-display)" }}>
-            {mode === "register" ? "Create your account" : "Welcome back"}
-          </h2>
-          <p className="muted">
-            {mode === "register"
-              ? "Start a project and get AI-guided room planning."
-              : "Log in to continue your project."}
-          </p>
-          <form onSubmit={submit} className="grid">
+    <div className="container landing-shell page-shell-v2 auth-page-v2">
+      <motion.div initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.45 }}>
+        <div className="nav landing-nav page-nav-v2">
+          <div className="nav-brand landing-brand-v2">Dream Nest AI</div>
+          <div className="nav-actions">
+            <a className="btn btn-outline" href="/">Studio</a>
+            <a className="btn btn-outline" href="/about">About</a>
+            <a className="btn btn-outline" href="/vendors">Vendors</a>
+          </div>
+        </div>
+
+        <section className="auth-stage-v2">
+          <div className="card landing-panel auth-intro-v2">
+            <div className="studio-kicker">Secure Access</div>
+            <h1 className="auth-title-v2">
+              {mode === "register" ? "Create a secure DreamNest workspace" : "Continue your planning workflow"}
+            </h1>
+            <p className="muted auth-copy-v2">
+              {mode === "register"
+                ? "Register once, protect your room plans, and keep sourcing, budgeting, and vendor tracking inside one account."
+                : "Log in to resume your project, review decisions, and keep every room plan synced across the workflow."}
+            </p>
+            <div className="auth-highlights-v2">
+              <div className="auth-highlight-v2">
+                <strong>Protected login</strong>
+                <span className="muted">Strong-password checks, throttling, and duplicate-email protection.</span>
+              </div>
+              <div className="auth-highlight-v2">
+                <strong>Project continuity</strong>
+                <span className="muted">Pick up the same dashboard, shortlist, and planning surface after sign-in.</span>
+              </div>
+              <div className="auth-highlight-v2">
+                <strong>Studio-ready workflow</strong>
+                <span className="muted">Keep design direction, budgeting, sourcing, and vendor actions tied to one profile.</span>
+              </div>
+            </div>
+          </div>
+
+          <div className="glass-stack landing-panel auth-form-panel-v2">
+            <h2 style={{ fontFamily: "var(--font-display)" }}>
+              {mode === "register" ? "Create your account" : "Welcome back"}
+            </h2>
+            <p className="muted">
+              {mode === "register"
+                ? "Start a project and get AI-guided room planning."
+                : "Log in to continue your project."}
+            </p>
+            <form onSubmit={submit} className="grid">
             {mode === "register" && (
               <>
                 <input
@@ -155,23 +193,26 @@ export default function Auth() {
             <button className="btn btn-accent2" type="submit" disabled={loading}>
               {loading ? "Please wait..." : mode === "register" ? "Create account" : "Log in"}
             </button>
-          </form>
-          <div style={{ marginTop: 12, display: "flex", gap: 10, flexWrap: "wrap" }}>
-            <button
-              className="btn btn-outline"
-              onClick={() => {
-                setMode(mode === "register" ? "login" : "register");
-                setError("");
-                setTouched({});
-                setForm({ name: "", email: form.email, password: "", confirmPassword: "" });
-              }}
-            >
-              {mode === "register" ? "I already have an account" : "Create new account"}
-            </button>
-            <a className="btn btn-outline" href="/vendors">Go to Vendor Marketplace</a>
+            </form>
+            <div style={{ marginTop: 12, display: "flex", gap: 10, flexWrap: "wrap" }}>
+              <button
+                className="btn btn-outline"
+                onClick={() => {
+                  setMode(mode === "register" ? "login" : "register");
+                  setError("");
+                  setTouched({});
+                  setForm({ name: "", email: form.email, password: "", confirmPassword: "" });
+                }}
+              >
+                {mode === "register" ? "I already have an account" : "Create new account"}
+              </button>
+              <a className="btn btn-outline" href="/vendors">Go to Vendor Marketplace</a>
+            </div>
           </div>
-        </div>
-      </div>
+        </section>
+
+        <SiteFooter />
+      </motion.div>
     </div>
   );
 }

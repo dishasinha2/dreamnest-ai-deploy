@@ -1,5 +1,8 @@
 import { useEffect, useMemo, useState } from "react";
+import { motion } from "framer-motion";
 import { VendorsAPI } from "../api/endpoints";
+import AmbientCanvas from "../components/AmbientCanvas";
+import SiteFooter from "../components/SiteFooter";
 import { useAuth } from "../hooks/useAuth";
 
 const BASE = import.meta.env.VITE_API_BASE || "http://localhost:5000";
@@ -128,13 +131,12 @@ export default function Vendors() {
   }
 
   return (
-    <div className="container">
-      <div className="nav">
-        <div className="nav-brand">
-          <span style={{ color: "var(--accent)" }}>Dream</span>Nest AI
-        </div>
+    <div className="container landing-shell page-shell-v2 vendors-page-v2 app-editorial-shell vendors-editorial-page workspace-shell">
+      <motion.div initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.45 }}>
+      <div className="nav landing-nav page-nav-v2 app-editorial-nav">
+        <div className="nav-brand landing-brand-v2">Dream Nest AI</div>
         <div className="nav-actions">
-          <a className="btn btn-outline" href="/">Continue as Customer</a>
+          <a className="btn btn-outline" href="/">Customer View</a>
           <button
             className="btn btn-outline"
             onClick={() => {
@@ -144,12 +146,13 @@ export default function Vendors() {
               localStorage.setItem("dreamnest_theme", next);
             }}
           >
-            Theme
+            Toggle Theme
           </button>
         </div>
       </div>
 
-      <div className="card" style={{ borderColor: "rgba(42,229,192,.45)" }}>
+      <div className="card landing-panel vendors-hero-v2 app-editorial-hero ambient-panel" style={{ borderColor: "rgba(42,229,192,.45)" }}>
+        <AmbientCanvas variant="gold" mode="panel" intensity={0.9} />
         <h2 style={{ fontFamily: "var(--font-display)" }}>Vendor Marketplace</h2>
         <p className="muted">Vendor-only area. Register your studio to get customer projects.</p>
         <div className="icon-row" style={{ justifyContent: "flex-start" }}>
@@ -166,8 +169,8 @@ export default function Vendors() {
         </div>
       </div>
 
-      <div className="grid grid-2" style={{ marginTop: 18 }}>
-        <div className="card">
+      <div className="grid grid-2 app-editorial-main vendors-main-grid" style={{ marginTop: 18 }}>
+        <div className="card vendors-list-panel">
           <h3 style={{ fontFamily: "var(--font-display)" }}>Local vendors</h3>
           <div className="grid" style={{ gridTemplateColumns: "1.5fr auto 1fr 1fr 1fr 1fr", gap: 8 }}>
             <input
@@ -283,7 +286,7 @@ export default function Vendors() {
           </div>
         </div>
 
-        <div className="card">
+        <div className="card vendors-apply-panel">
           <h3 style={{ fontFamily: "var(--font-display)" }}>Apply as a vendor</h3>
           <div className="glass-panel" style={{ marginBottom: 12 }}>
             <div className="section-sub">Why join DreamNest</div>
@@ -375,6 +378,8 @@ export default function Vendors() {
           </form>
         </div>
       </div>
+      <SiteFooter />
+      </motion.div>
     </div>
   );
 }

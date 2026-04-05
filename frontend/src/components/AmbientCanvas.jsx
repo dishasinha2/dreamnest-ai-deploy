@@ -1,12 +1,52 @@
 import { useEffect, useRef } from "react";
 
-function getPalette(variant) {
+function getPalette(variant, theme = "dark") {
+  if (theme === "light") {
+    if (variant === "green") {
+      return {
+        orbs: ["rgba(181,199,151,0.30)", "rgba(214,197,167,0.24)", "rgba(160,182,168,0.18)"],
+        particles: "rgba(154,111,67,0.24)",
+        lines: "rgba(122,149,112,0.18)",
+        glow: "rgba(196,164,112,0.24)",
+        wave1: "rgba(196,164,112,0.22)",
+        wave2: "rgba(122,149,112,0.18)",
+        wave3: "rgba(107,135,146,0.14)",
+        halo: "rgba(255,246,231,0.34)"
+      };
+    }
+    if (variant === "gold") {
+      return {
+        orbs: ["rgba(201,160,105,0.32)", "rgba(255,244,226,0.30)", "rgba(214,183,138,0.24)"],
+        particles: "rgba(154,111,67,0.26)",
+        lines: "rgba(196,164,112,0.20)",
+        glow: "rgba(214,183,138,0.30)",
+        wave1: "rgba(196,164,112,0.24)",
+        wave2: "rgba(214,183,138,0.18)",
+        wave3: "rgba(122,149,112,0.12)",
+        halo: "rgba(255,249,238,0.40)"
+      };
+    }
+    return {
+      orbs: ["rgba(212,178,132,0.28)", "rgba(188,202,165,0.22)", "rgba(151,170,177,0.18)"],
+      particles: "rgba(154,111,67,0.22)",
+      lines: "rgba(154,111,67,0.16)",
+      glow: "rgba(255,242,222,0.34)",
+      wave1: "rgba(196,164,112,0.20)",
+      wave2: "rgba(122,149,112,0.14)",
+      wave3: "rgba(107,135,146,0.12)",
+      halo: "rgba(255,249,238,0.34)"
+    };
+  }
   if (variant === "green") {
     return {
       orbs: ["rgba(137,166,123,0.24)", "rgba(111,141,154,0.18)", "rgba(197,165,111,0.12)"],
       particles: "rgba(237,242,247,0.24)",
       lines: "rgba(137,166,123,0.12)",
-      glow: "rgba(137,166,123,0.18)"
+      glow: "rgba(137,166,123,0.18)",
+      wave1: "rgba(197,165,111,0.12)",
+      wave2: "rgba(137,166,123,0.11)",
+      wave3: "rgba(237,242,247,0.06)",
+      halo: "rgba(111,141,154,0.08)"
     };
   }
   if (variant === "gold") {
@@ -14,14 +54,22 @@ function getPalette(variant) {
       orbs: ["rgba(197,165,111,0.24)", "rgba(255,255,255,0.08)", "rgba(111,141,154,0.12)"],
       particles: "rgba(237,242,247,0.22)",
       lines: "rgba(197,165,111,0.12)",
-      glow: "rgba(197,165,111,0.2)"
+      glow: "rgba(197,165,111,0.2)",
+      wave1: "rgba(197,165,111,0.12)",
+      wave2: "rgba(137,166,123,0.11)",
+      wave3: "rgba(237,242,247,0.06)",
+      halo: "rgba(111,141,154,0.08)"
     };
   }
   return {
     orbs: ["rgba(197,165,111,0.20)", "rgba(137,166,123,0.16)", "rgba(111,141,154,0.12)"],
     particles: "rgba(237,242,247,0.22)",
     lines: "rgba(237,242,247,0.08)",
-    glow: "rgba(237,242,247,0.12)"
+    glow: "rgba(237,242,247,0.12)",
+    wave1: "rgba(197,165,111,0.12)",
+    wave2: "rgba(137,166,123,0.11)",
+    wave3: "rgba(237,242,247,0.06)",
+    halo: "rgba(111,141,154,0.08)"
   };
 }
 
@@ -35,8 +83,8 @@ export default function AmbientCanvas({ className = "", variant = "default", mod
     if (!ctx) return;
 
     const target = canvas.parentElement;
-    const palette = getPalette(variant);
     const isPanel = mode === "panel";
+    const isLightTheme = () => document.documentElement.dataset.theme === "light";
     const particleCount = isPanel ? 24 : 52;
     const lineThreshold = isPanel ? 110 : 135;
     const orbs = Array.from({ length: isPanel ? 3 : 5 }, (_, idx) => ({
@@ -83,6 +131,7 @@ export default function AmbientCanvas({ className = "", variant = "default", mod
     }
 
     function drawMeshGlow() {
+      const palette = getPalette(variant, isLightTheme() ? "light" : "dark");
       glowX += (mouseX - glowX) * 0.03;
       glowY += (mouseY - glowY) * 0.03;
 
@@ -90,13 +139,14 @@ export default function AmbientCanvas({ className = "", variant = "default", mod
       const y = glowY * height;
       const grad = ctx.createRadialGradient(x, y, 0, x, y, Math.max(width, height) * 0.34);
       grad.addColorStop(0, palette.glow);
-      grad.addColorStop(0.38, "rgba(111,141,154,0.08)");
+      grad.addColorStop(0.38, palette.halo);
       grad.addColorStop(1, "rgba(0,0,0,0)");
       ctx.fillStyle = grad;
       ctx.fillRect(0, 0, width, height);
     }
 
     function drawOrbs() {
+      const palette = getPalette(variant, isLightTheme() ? "light" : "dark");
       orbs.forEach((orb, idx) => {
         const x = width * orb.x + Math.sin(frame * orb.drift * 2 + idx) * 24;
         const y = height * orb.y + Math.cos(frame * orb.drift * 1.7 + idx) * 18;
@@ -111,6 +161,8 @@ export default function AmbientCanvas({ className = "", variant = "default", mod
     }
 
     function drawParticles() {
+      const palette = getPalette(variant, isLightTheme() ? "light" : "dark");
+      const radiusBoost = isLightTheme() ? (isPanel ? 1.22 : 1.5) : 1;
       ctx.strokeStyle = palette.lines;
       ctx.lineWidth = 1;
 
@@ -127,7 +179,7 @@ export default function AmbientCanvas({ className = "", variant = "default", mod
         const ay = a.y * height;
         ctx.fillStyle = palette.particles;
         ctx.beginPath();
-        ctx.arc(ax, ay, a.r, 0, Math.PI * 2);
+        ctx.arc(ax, ay, a.r * radiusBoost, 0, Math.PI * 2);
         ctx.fill();
 
         for (let j = i + 1; j < particles.length; j += 1) {
@@ -147,20 +199,22 @@ export default function AmbientCanvas({ className = "", variant = "default", mod
     }
 
     function drawWaveLayer() {
+      const palette = getPalette(variant, isLightTheme() ? "light" : "dark");
+      const lightMode = isLightTheme();
       const baseY = height * 0.52;
-      ctx.lineWidth = 1.2;
+      ctx.lineWidth = lightMode ? 1.9 : 1.2;
       for (let row = 0; row < 3; row += 1) {
         ctx.beginPath();
         for (let x = 0; x <= width; x += 14) {
           const y =
             baseY +
             row * 44 +
-            Math.sin(x * 0.01 + frame * 0.014 + row) * (10 + row * 3) +
-            Math.cos(x * 0.004 + frame * 0.01) * 6;
+            Math.sin(x * 0.01 + frame * (lightMode ? 0.008 : 0.014) + row) * (10 + row * 3) +
+            Math.cos(x * 0.004 + frame * (lightMode ? 0.0055 : 0.01)) * (lightMode ? 7 : 6);
           if (x === 0) ctx.moveTo(x, y);
           else ctx.lineTo(x, y);
         }
-        ctx.strokeStyle = row === 0 ? "rgba(197,165,111,0.12)" : row === 1 ? "rgba(137,166,123,0.11)" : "rgba(237,242,247,0.06)";
+        ctx.strokeStyle = row === 0 ? palette.wave1 : row === 1 ? palette.wave2 : palette.wave3;
         ctx.stroke();
       }
     }

@@ -1,17 +1,87 @@
 ﻿import { motion } from "framer-motion";
 import { useEffect, useState } from "react";
-import AmbientCanvas from "../components/AmbientCanvas";
 import SiteFooter from "../components/SiteFooter";
 
-const stagger = { show: { transition: { staggerChildren: 0.08, delayChildren: 0.12 } } };
-const item = { hidden: { opacity: 0, y: 14 }, show: { opacity: 1, y: 0 } };
+const stagger = { show: { transition: { staggerChildren: 0.08, delayChildren: 0.08 } } };
+const item = { hidden: { opacity: 0, y: 18 }, show: { opacity: 1, y: 0 } };
+
+const featureTags = [
+  "Moodboard-style visual references",
+  "Budget split with practical categories",
+  "Live product links from multiple stores",
+  "Pinterest-ready inspiration keywords"
+];
+
+const renderMetrics = [
+  {
+    icon: "SM",
+    title: "Style Match",
+    value: "98%",
+    meta: "Scandinavian · Minimal",
+    progress: 98
+  },
+  {
+    icon: "BU",
+    title: "Budget Utilized",
+    value: "₹2.4L",
+    meta: "of ₹3L total budget",
+    progress: 80
+  },
+  {
+    icon: "A+",
+    title: "Design Score",
+    value: "Client-ready",
+    meta: "Presentation quality locked",
+    progress: null
+  }
+];
+
+const serviceCards = [
+  {
+    icon: "01",
+    title: "Concept + Moodboards",
+    text: "Generate room concepts, design language, and Pinterest-driven references in minutes."
+  },
+  {
+    icon: "02",
+    title: "Procurement Planning",
+    text: "Find real ecommerce links, compare options, and balance spend by category."
+  },
+  {
+    icon: "03",
+    title: "Execution Coordination",
+    text: "Shortlist city-based vendors with portfolio context and move from idea to install."
+  }
+];
+
+const workflowSteps = [
+  ["01", "Brief", "Define room type, area, style, city, and budget."],
+  ["02", "Design Direction", "Get layout guidance, visual cues, and decor ideas."],
+  ["03", "Sourcing", "Pull live product links and shortlist market-ready options."],
+  ["04", "Execution", "Connect with vendors and track project progress."]
+];
 
 export default function Landing() {
   const [showSplash, setShowSplash] = useState(true);
+  const [currentSlide, setCurrentSlide] = useState(0);
+  const heroSlides = [
+    "https://images.unsplash.com/photo-1618219908412-a29a1bb7b86e?auto=format&fit=crop&w=1920&q=85",
+    "https://images.unsplash.com/photo-1586023492125-27b2c045efd7?auto=format&fit=crop&w=1920&q=85",
+    "https://images.unsplash.com/photo-1616594039964-ae9021a400a0?auto=format&fit=crop&w=1920&q=85",
+    "https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?auto=format&fit=crop&w=1920&q=85"
+  ];
+
   useEffect(() => {
-    const t = setTimeout(() => setShowSplash(false), 1300);
+    const t = setTimeout(() => setShowSplash(false), 1100);
     return () => clearTimeout(t);
   }, []);
+
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setCurrentSlide((prev) => (prev + 1) % heroSlides.length);
+    }, 5500);
+    return () => clearInterval(timer);
+  }, [heroSlides.length]);
 
   function toggleTheme() {
     const root = document.documentElement;
@@ -21,233 +91,199 @@ export default function Landing() {
   }
 
   return (
-    <div className="container landing-shell">
-      <div className="landing-bg-layer landing-bg-mesh ambient-panel" aria-hidden="true">
-        <AmbientCanvas variant="gold" mode="full" intensity={0.8} />
-      </div>
-      <div className="landing-bg-layer landing-bg-particles ambient-panel" aria-hidden="true">
-        <AmbientCanvas variant="default" mode="full" intensity={1} />
-      </div>
-      <div className="landing-bg-layer landing-bg-glow ambient-panel" aria-hidden="true">
-        <AmbientCanvas variant="green" mode="full" intensity={0.65} />
-      </div>
-      <div className="landing-aura landing-aura-1" aria-hidden="true" />
-      <div className="landing-aura landing-aura-2" aria-hidden="true" />
-      <div className="landing-grid" aria-hidden="true" />
+    <div className="container landing-shell landing-shell-v2 landing-shell-cinematic">
       {showSplash && (
         <div className="splash">
           <div className="splash-title">DreamNest</div>
         </div>
       )}
+
       <motion.div initial="hidden" animate="show" variants={stagger}>
-        <motion.div variants={item} className="nav landing-nav">
-          <div className="nav-brand">
-            <span style={{ color: "var(--accent)" }}>Dream</span>Nest AI
+        <motion.nav variants={item} className="nav landing-nav landing-nav-v2 app-editorial-nav landing-nav-cinematic">
+          <div className="nav-brand landing-brand-v2">
+            Dream Nest AI <span className="landing-brand-mark">✦</span>
           </div>
-          <div className="nav-actions">
-            <a className="btn btn-outline" href="/auth">Login / Signup</a>
+          <div className="nav-actions landing-nav-actions-v2">
+            <a className="landing-nav-link-v2" href="/auth">Login</a>
+            <span className="landing-nav-divider-v2">/</span>
+            <a className="landing-nav-link-v2" href="/auth">Signup</a>
             <a className="btn btn-outline" href="/about">Our Studio</a>
-            <a className="btn btn-accent3" href="/vendors">For Vendors</a>
-            <button className="btn btn-outline" onClick={toggleTheme}>Theme</button>
+            <a className="landing-nav-link-v2" href="/vendors">For Vendors</a>
+            <button className="btn btn-outline nav-icon-btn" onClick={toggleTheme} aria-label="Toggle theme">
+              ◐
+            </button>
           </div>
-        </motion.div>
+        </motion.nav>
 
-        <motion.section variants={item} className="studio-hero landing-hero-clean">
-          <div className="card studio-intro reveal-block landing-panel landing-copy-panel">
-            <div className="studio-kicker">Interior Design Studio Workflow</div>
-            <h1>
-              Build a <span className="landing-highlight">designer-grade</span>
-              <br />
-              home interior website
+        <motion.section variants={item} className="landing-hero-editorial landing-hero-cinematic">
+          <div className="hero-slides-v3" aria-hidden="true">
+            {heroSlides.map((src, index) => (
+              <div
+                key={src}
+                className={`hero-slide-v3 ${index === currentSlide ? "is-active" : ""}`}
+                style={{ backgroundImage: `url(${src})` }}
+              />
+            ))}
+          </div>
+          <div className="hero-grain-v3" aria-hidden="true" />
+          <div className="hero-overlay-v3" aria-hidden="true" />
+
+          <div className="hero-copy-v3">
+            <div className="hero-kicker-v3">
+              <span className="hero-kicker-line-v3" />
+              <span className="hero-kicker-text-v3">AI Powered Interior Studio</span>
+            </div>
+            <h1 className="hero-title-v3">
+              <span>Designer-grade</span>
+              <em>home interiors,</em>
+              <span className="hero-title-soft-v3">planned beautifully.</span>
             </h1>
-            <p className="muted">
-              DreamNest combines aesthetic direction, budget logic, product sourcing, and vendor execution in one place.
-              Build each room like a real interior designer presentation.
+            <p className="hero-desc-v3">
+              DreamNest brings concept direction, budget clarity, sourcing, and vendor execution into one refined workflow.
+              Shape every room with the polish of a designer presentation.
             </p>
-            <div className="studio-actions">
-              <a className="btn" href="/auth">Start New Project</a>
-              <a className="btn btn-outline" href="/about">View Studio Process</a>
-              <a className="btn btn-outline" href="/feedback">Client Feedback</a>
-            </div>
-            <div className="landing-copy-metrics">
-              <div className="studio-metric">
-                <div className="value">20+</div>
-                <div className="muted">Room categories</div>
-              </div>
-              <div className="studio-metric">
-                <div className="value">220</div>
-                <div className="muted">Product links per run</div>
-              </div>
-              <div className="studio-metric">
-                <div className="value">1</div>
-                <div className="muted">Unified workflow</div>
-              </div>
-            </div>
-            <div className="landing-copy-signals">
-              <span>Editorial visuals</span>
-              <span>AI room concepts</span>
-              <span>Vendor-ready outputs</span>
+            <div className="hero-actions-v3">
+              <a className="btn btn-editorial" href="/auth">Start New Project</a>
+              <a className="btn btn-outline btn-editorial-outline" href="/about">View Studio Process</a>
+              <a className="btn btn-outline btn-editorial-outline" href="/feedback">Client Feedback</a>
             </div>
           </div>
 
-          <div className="card landing-stage-panel ambient-panel reveal-block">
-            <AmbientCanvas variant="gold" mode="panel" intensity={0.9} />
-            <div className="landing-status-badge">AI Rendering Room</div>
-            <div className="landing-stage-frame">
-              <div className="landing-stage-main-wrap">
-                <img
-                  src="https://images.unsplash.com/photo-1616486338812-3dadae4b4ace?q=80&w=1400&auto=format&fit=crop"
-                  alt="Interior moodboard style space"
-                  decoding="async"
-                  className="landing-stage-main"
-                />
-                <div className="landing-stage-caption">
-                  <strong>Signature Living Concept</strong>
-                  <span>Warm palette, clean circulation, layered textures</span>
-                </div>
-              </div>
-              <div className="landing-stage-stack">
-                <div className="landing-stage-secondary">
-                  <img
-                    src="https://images.unsplash.com/photo-1600210492493-0946911123ea?q=80&w=1200&auto=format&fit=crop"
-                    alt="Living room styling"
-                    loading="lazy"
-                    decoding="async"
-                  />
-                  <span>Studio moodboard</span>
-                </div>
-                <div className="landing-stage-secondary landing-stage-secondary-tall">
-                  <img
-                    src="https://images.unsplash.com/photo-1617104551722-3b2d51366464?q=80&w=1200&auto=format&fit=crop"
-                    alt="Designer living room setup"
-                    loading="lazy"
-                    decoding="async"
-                  />
-                  <span>Designer-ready setup</span>
-                </div>
+          <div className="hero-dots-v3" aria-label="Hero slides">
+            {heroSlides.map((_, index) => (
+              <button
+                key={index}
+                type="button"
+                className={`hero-dot-v3 ${index === currentSlide ? "is-active" : ""}`}
+                onClick={() => setCurrentSlide(index)}
+                aria-label={`Go to slide ${index + 1}`}
+              />
+            ))}
+          </div>
+
+          <div className="hero-stats-v3">
+            <div className="hero-stat-v3">
+              <span className="hero-stat-line-v3" />
+              <div>
+                <strong>20+</strong>
+                <span>Room Categories</span>
               </div>
             </div>
-            <div className="landing-stage-stats">
-              <div className="landing-stage-metric">
-                <span>Budget Utilized</span>
-                <strong>{"\u20B9"}2.4L</strong>
-                <small>of {"\u20B9"}3L total budget</small>
+            <div className="hero-stat-v3">
+              <span className="hero-stat-line-v3" />
+              <div>
+                <strong>220</strong>
+                <span>Product Links Per Run</span>
               </div>
-              <div className="landing-stage-metric">
-                <span>Style Match</span>
-                <strong>98%</strong>
-                <small>Scandinavian · Minimal</small>
+            </div>
+            <div className="hero-stat-v3">
+              <span className="hero-stat-line-v3" />
+              <div>
+                <strong>1</strong>
+                <span>Unified Workflow</span>
               </div>
-              <div className="landing-stage-metric">
-                <span>Design Score</span>
+            </div>
+            <div className="hero-stat-v3">
+              <span className="hero-stat-line-v3" />
+              <div>
                 <strong>A+</strong>
-                <small>Client presentation ready</small>
+                <span>Average Design Score</span>
               </div>
             </div>
           </div>
         </motion.section>
 
-        <motion.section variants={item} className="landing-feature-strip">
-          {[
-            "Moodboard-style visual references",
-            "Budget split with practical categories",
-            "Live product links from multiple stores",
-            "Pinterest-ready inspiration keywords"
-          ].map((n) => (
-            <div key={n} className="landing-feature-pill">{n}</div>
-          ))}
-        </motion.section>
+        <motion.section variants={item} className="landing-section-v2 landing-section-cinematic">
+          <div className="landing-section-heading-v2">
+            <div className="studio-kicker">AI Rendering Room</div>
+            <h2 className="section-title landing-section-title-v2">Live studio metrics for every room direction</h2>
+          </div>
 
-        <motion.section variants={item} className="landing-marquee-wrap">
-          <div className="landing-marquee">
-            {[
-              "Moodboard-style visual references",
-              "Budget split with practical categories",
-              "Live product links from multiple stores",
-              "Pinterest-ready inspiration keywords",
-              "Room-by-room design presentations"
-            ]
-              .concat([
-                "Moodboard-style visual references",
-                "Budget split with practical categories",
-                "Live product links from multiple stores",
-                "Pinterest-ready inspiration keywords",
-                "Room-by-room design presentations"
-              ])
-              .map((text, idx) => (
-                <span key={`${text}-${idx}`}>{text}</span>
-              ))}
+          <div className="landing-render-grid-v2">
+            {renderMetrics.map((metric) => (
+              <motion.article
+                key={metric.title}
+                className="landing-render-card-v2"
+                whileHover={{ y: -6 }}
+                transition={{ duration: 0.22 }}
+              >
+                <div className="landing-render-icon-v2">{metric.icon}</div>
+                <h3>{metric.title}</h3>
+                <div className="landing-render-value-v2">{metric.value}</div>
+                <p>{metric.meta}</p>
+                {metric.progress !== null && (
+                  <div className="landing-progress-v2">
+                    <span style={{ width: `${metric.progress}%` }} />
+                  </div>
+                )}
+              </motion.article>
+            ))}
+          </div>
+
+          <div className="landing-tags-v2">
+            {featureTags.map((tag) => (
+              <span key={tag} className="landing-tag-v2">{tag}</span>
+            ))}
           </div>
         </motion.section>
 
-        <motion.section variants={item} className="card studio-section reveal-block landing-panel">
-          <div className="landing-section-head">
+        <motion.section variants={item} className="landing-section-v2 landing-section-cinematic">
+          <div className="landing-section-heading-v2">
             <div className="studio-kicker">Studio Services</div>
+            <h2 className="section-title landing-section-title-v2">Services built like a premium interior studio</h2>
           </div>
-          <h2>Studio Services</h2>
-          <div className="studio-service-grid">
-            {[
-              { t: "Concept + Moodboards", d: "Generate room concepts, design language, and Pinterest-driven references in minutes." },
-              { t: "Procurement Planning", d: "Find real ecommerce links, compare options, and balance spend by category." },
-              { t: "Execution Coordination", d: "Shortlist city-based vendors with portfolio context and move from idea to install." }
-            ].map((s) => (
-              <article key={s.t} className="studio-service">
-                <h3>{s.t}</h3>
-                <div className="muted">{s.d}</div>
-              </article>
+          <div className="landing-services-grid-v2">
+            {serviceCards.map((service) => (
+              <motion.article
+                key={service.title}
+                className="landing-service-card-v2"
+                whileHover={{ y: -6 }}
+                transition={{ duration: 0.22 }}
+              >
+                <div className="landing-service-icon-v2">{service.icon}</div>
+                <h3>{service.title}</h3>
+                <p className="muted">{service.text}</p>
+              </motion.article>
             ))}
           </div>
         </motion.section>
 
-        <motion.section variants={item} className="card studio-section reveal-block landing-panel">
-          <div className="landing-section-head">
+        <motion.section variants={item} className="landing-section-v2 landing-section-cinematic">
+          <div className="landing-section-heading-v2">
             <div className="studio-kicker">Project Workflow</div>
+            <h2 className="section-title landing-section-title-v2">How a project moves from brief to execution</h2>
           </div>
-          <h2>How A Project Moves</h2>
-          <div className="studio-process">
-            {[
-              ["01", "Brief", "Define room type, area, style, city, and budget."],
-              ["02", "Design Direction", "Get layout guidance, visual cues, and decor ideas."],
-              ["03", "Sourcing", "Pull live product links and shortlist market-ready options."],
-              ["04", "Execution", "Connect with vendors and track project progress."]
-            ].map(([n, t, d]) => (
-              <article key={n} className="studio-step">
-                <div className="num">{n}</div>
-                <div style={{ fontFamily: "var(--font-display)", fontSize: 28 }}>{t}</div>
-                <div className="muted">{d}</div>
-              </article>
+          <div className="landing-workflow-grid-v2">
+            {workflowSteps.map(([n, t, d]) => (
+              <motion.article
+                key={n}
+                className="landing-step-card-v2"
+                whileHover={{ y: -5 }}
+                transition={{ duration: 0.2 }}
+              >
+                <div className="landing-step-number-v2">{n}</div>
+                <h3>{t}</h3>
+                <p className="muted">{d}</p>
+              </motion.article>
             ))}
           </div>
         </motion.section>
 
-        <motion.section variants={item} className="card studio-section reveal-block landing-panel">
-          <div className="landing-section-head">
+        <motion.section variants={item} className="landing-portfolio-v2 reveal-block landing-section-cinematic">
+          <div className="landing-section-heading-v2">
             <div className="studio-kicker">Portfolio Atmosphere</div>
+            <h2 className="section-title landing-section-title-v2">Make your home feel designer-planned</h2>
           </div>
-          <h2>Portfolio Atmosphere</h2>
-          <div className="studio-gallery">
-            {[
-              "https://images.unsplash.com/photo-1600566752355-35792bedcfea?q=80&w=1200&auto=format&fit=crop",
-              "https://images.unsplash.com/photo-1616594039964-3ad2f516f4c5?q=80&w=1200&auto=format&fit=crop",
-              "https://images.unsplash.com/photo-1616486029423-aaa4789e8c9a?q=80&w=1200&auto=format&fit=crop",
-              "https://images.unsplash.com/photo-1615529182904-14819c35db37?q=80&w=1200&auto=format&fit=crop"
-            ].map((src) => (
-              <img key={src} src={src} alt="Interior design portfolio" loading="lazy" decoding="async" />
-            ))}
-          </div>
-        </motion.section>
-
-        <motion.section variants={item} className="studio-cta reveal-block landing-cta-panel">
-          <h3>Make Your Home Feel Designer-Planned</h3>
-          <p className="muted" style={{ maxWidth: 760, margin: "0 auto 16px" }}>
+          <p className="muted landing-portfolio-copy-v2">
             DreamNest is built like an interior design website first, then powered by AI for speed.
             Start your room and generate a complete direction instantly.
           </p>
-          <div className="studio-actions" style={{ justifyContent: "center", marginTop: 0 }}>
+          <div className="landing-portfolio-actions-v2">
             <a className="btn" href="/auth">Start Designing</a>
             <a className="btn btn-outline" href="/vendors">Explore Vendors</a>
           </div>
         </motion.section>
+
         <motion.div variants={item}>
           <SiteFooter />
         </motion.div>

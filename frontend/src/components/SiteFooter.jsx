@@ -13,7 +13,7 @@ export default function SiteFooter() {
         <a href="/about">Studio</a>
         <a href="/vendors">Vendors</a>
         <a href="/feedback">Feedback</a>
-        <a href="/auth">Start Project</a>
+        <a href="/auth">Start a Project</a>
       </div>
       <div className="site-footer-meta muted">
         <span>Designer-grade room planning</span>

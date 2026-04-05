@@ -1,5 +1,7 @@
 import { useState } from "react";
 import { AdminAPI, ProductsAPI } from "../api/endpoints";
+import AmbientCanvas from "../components/AmbientCanvas";
+import SiteFooter from "../components/SiteFooter";
 
 const BASE = import.meta.env.VITE_API_BASE || "http://localhost:5000";
 
@@ -153,8 +155,8 @@ export default function Admin() {
   }
 
   return (
-    <div className="container">
-      <div className="nav">
+    <div className="container app-editorial-shell admin-editorial-page workspace-shell">
+      <div className="nav app-editorial-nav">
         <div className="nav-brand">
           <span style={{ color: "var(--accent)" }}>Dream</span>Nest Admin
         </div>
@@ -163,8 +165,11 @@ export default function Admin() {
         </div>
       </div>
 
-      <div className="card">
-        <h3 style={{ fontFamily: "var(--font-display)" }}>Admin secret</h3>
+      <div className="card app-editorial-hero ambient-panel admin-hero-band">
+        <AmbientCanvas variant="gold" mode="panel" intensity={0.88} />
+        <div className="studio-kicker">Operations Console</div>
+        <h2 style={{ fontFamily: "var(--font-display)", marginBottom: 10 }}>Admin secret and platform controls</h2>
+        <p className="muted" style={{ maxWidth: 620 }}>Review vendor applications, inspect analytics, ingest live products, and manage critical catalog actions from one controlled workspace.</p>
         <div className="grid" style={{ gridTemplateColumns: "1fr auto", alignItems: "center" }}>
           <input
             className="input"
@@ -173,15 +178,15 @@ export default function Admin() {
             onChange={(e) => setSecret(e.target.value)}
           />
           <div style={{ display: "flex", gap: 8 }}>
-            <button className="btn btn-outline" onClick={loadApps}>Load applications</button>
-            <button className="btn btn-outline" onClick={loadAnalytics}>Load analytics</button>
+            <button className="btn btn-outline" onClick={loadApps}>Load Applications</button>
+            <button className="btn btn-outline" onClick={loadAnalytics}>Load Analytics</button>
           </div>
         </div>
         {error && <div className="muted" style={{ marginTop: 8 }}>{error}</div>}
       </div>
 
       {analytics && (
-        <div className="card" style={{ marginTop: 18 }}>
+        <div className="card admin-analytics-card" style={{ marginTop: 18 }}>
           <h3 style={{ fontFamily: "var(--font-display)" }}>Analytics</h3>
           <div className="grid grid-3">
             <div className="card" style={{ boxShadow: "none" }}>Users: {analytics.totals.users}</div>
@@ -201,8 +206,8 @@ export default function Admin() {
         </div>
       )}
 
-      <div className="grid grid-2" style={{ marginTop: 18 }}>
-        <div className="card">
+      <div className="grid grid-2 app-editorial-main admin-main-grid" style={{ marginTop: 18 }}>
+        <div className="card admin-panel">
           <h3 style={{ fontFamily: "var(--font-display)" }}>Vendor applications</h3>
           <div className="grid">
             {apps.map((a) => (
@@ -220,8 +225,7 @@ export default function Admin() {
             {!apps.length && <div className="muted">No applications loaded.</div>}
           </div>
         </div>
-
-        <div className="card">
+        <div className="card admin-panel">
           <h3 style={{ fontFamily: "var(--font-display)" }}>Add vendor directly</h3>
           <form onSubmit={createVendor} className="grid">
             <input className="input" placeholder="Business name" value={vendor.name} onChange={(e) => setVendor({ ...vendor, name: e.target.value })} />
@@ -240,11 +244,10 @@ export default function Admin() {
             />
             <textarea className="textarea" placeholder="About" value={vendor.about} onChange={(e) => setVendor({ ...vendor, about: e.target.value })} />
             <input className="input" placeholder="Years experience" type="number" value={vendor.years_exp} onChange={(e) => setVendor({ ...vendor, years_exp: e.target.value })} />
-            <button className="btn" type="submit">Create vendor</button>
+            <button className="btn" type="submit">Create Vendor</button>
           </form>
         </div>
-
-        <div className="card">
+        <div className="card admin-panel">
           <h3 style={{ fontFamily: "var(--font-display)" }}>Live product ingest</h3>
           <div className="grid">
             <input className="input" placeholder="Search query" value={liveQuery} onChange={(e) => setLiveQuery(e.target.value)} />
@@ -270,26 +273,27 @@ export default function Admin() {
           </div>
         </div>
 
-        <div className="card">
+        <div className="card admin-panel admin-danger-panel">
           <h3 style={{ fontFamily: "var(--font-display)" }}>Admin actions</h3>
           <div className="grid">
             <div className="card" style={{ boxShadow: "none" }}>
               <div className="muted">Delete vendor by ID</div>
               <div style={{ display: "flex", gap: 8, marginTop: 8 }}>
                 <input className="input" placeholder="Vendor ID" value={deleteVendorId} onChange={(e) => setDeleteVendorId(e.target.value)} />
-                <button className="btn btn-outline" onClick={removeVendor}>Delete</button>
+                <button className="btn btn-outline" onClick={removeVendor}>Delete Vendor</button>
               </div>
             </div>
             <div className="card" style={{ boxShadow: "none" }}>
               <div className="muted">Delete product by ID</div>
               <div style={{ display: "flex", gap: 8, marginTop: 8 }}>
                 <input className="input" placeholder="Product ID" value={deleteProductId} onChange={(e) => setDeleteProductId(e.target.value)} />
-                <button className="btn btn-outline" onClick={removeProduct}>Delete</button>
+                <button className="btn btn-outline" onClick={removeProduct}>Delete Product</button>
               </div>
             </div>
           </div>
         </div>
       </div>
+      <SiteFooter />
     </div>
   );
 }

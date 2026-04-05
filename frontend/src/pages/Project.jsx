@@ -696,8 +696,8 @@ export default function Project() {
   }
 
   return (
-    <div className="container studio-page workspace-shell">
-      <div className="nav studio-nav workspace-nav">
+    <div className="container studio-page workspace-shell app-editorial-shell project-editorial-page">
+      <div className="nav studio-nav workspace-nav app-editorial-nav">
         <div className="nav-brand">
           <span style={{ color: "var(--accent)" }}>Dream</span>Nest AI
         </div>
@@ -723,7 +723,7 @@ export default function Project() {
         </div>
       </div>
 
-      <div className="card studio-header-band ambient-panel workspace-hero-band">
+      <div className="card studio-header-band ambient-panel workspace-hero-band app-editorial-hero">
         <AmbientCanvas variant="gold" />
         <div>
           <div className="studio-kicker">Project Design Board</div>
@@ -748,7 +748,7 @@ export default function Project() {
         </div>
       </div>
 
-      <div className="grid grid-2" style={{ marginTop: 22, alignItems: "start" }}>
+      <div className="grid grid-2 app-editorial-main project-preview-grid" style={{ marginTop: 22, alignItems: "start" }}>
         <div className="glass-stack sourcing-preview-card workspace-panel ambient-panel">
           <AmbientCanvas variant="green" />
           <div className="section-head-row">
@@ -757,7 +757,7 @@ export default function Project() {
               <div className="muted">Keep the page compact here. Open the full sourcing board only when you need it.</div>
             </div>
             <button className="btn btn-outline" type="button" onClick={() => openCatalogModal("products")}>
-              View all
+              View All
             </button>
           </div>
           <div className="sourcing-preview-list">
@@ -778,7 +778,7 @@ export default function Project() {
                   <span>{storeNameFromUrl(p.product_url)} - {p.recommended_for || "Project fit"}</span>
                 </div>
                 <a className="btn btn-outline" href={normalizeUrl(p.product_url)} target="_blank" rel="noreferrer">
-                  Open
+                  View Product
                 </a>
               </div>
             ))}
@@ -805,7 +805,7 @@ export default function Project() {
               <div className="muted">Show the strongest matches here, then browse the full vendor board in a popup.</div>
             </div>
             <button className="btn btn-outline" type="button" onClick={() => openCatalogModal("vendors")}>
-              View all
+              View All
             </button>
           </div>
           <div className="sourcing-preview-list">
@@ -831,8 +831,8 @@ export default function Project() {
         </div>
       </div>
 
-      <div className="grid grid-2" style={{ marginTop: 22 }}>
-        <div className="glass-stack workspace-panel">
+      <div className="grid grid-2 project-overview-grid" style={{ marginTop: 22 }}>
+        <div className="glass-stack workspace-panel project-summary-card">
           <div style={{ fontFamily: "var(--font-display)", fontSize: 22 }}>{project.title}</div>
           <div className="muted">
             {project.room_type} - {project.location_city} - {project.area_sqft} sqft - Budget INR {project.budget_inr}
@@ -850,7 +850,7 @@ export default function Project() {
               </div>
             </div>
           )}
-        </div>        <div className="glass-stack workspace-panel">
+        </div>        <div className="glass-stack workspace-panel project-requirements-card">
           <h3 style={{ fontFamily: "var(--font-display)" }}>Requirements</h3>
           <form onSubmit={addRequirements} className="grid">
             <textarea className="textarea" placeholder="Notes" value={reqForm.notes} onChange={(e) => setReqForm({ ...reqForm, notes: e.target.value })} />
@@ -869,7 +869,7 @@ export default function Project() {
           </div>
         </div>
 
-        <div className="glass-stack workspace-panel ambient-panel">
+        <div className="glass-stack workspace-panel ambient-panel project-planning-card">
           <AmbientCanvas variant="green" />
           <h3 style={{ fontFamily: "var(--font-display)" }}>AI planning</h3>
           <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
@@ -937,7 +937,7 @@ export default function Project() {
         </div>
       </div>
 
-      <div className="glass-stack" style={{ marginTop: 22 }}>
+      <div className="glass-stack project-concepts-card" style={{ marginTop: 22 }}>
         <h3 style={{ fontFamily: "var(--font-display)" }}>Interior designer concepts</h3>
         <div className="muted">AI moodboards + layout direction from your room, style and requirement inputs.</div>
         <div className="grid grid-3" style={{ marginTop: 12 }}>
@@ -953,7 +953,7 @@ export default function Project() {
         </div>
       </div>
 
-      <div className="glass-stack" style={{ marginTop: 22 }}>
+      <div className="glass-stack project-deliverables-card" style={{ marginTop: 22 }}>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
           <h3 style={{ fontFamily: "var(--font-display)", margin: 0 }}>Designer Deliverables</h3>
           <div style={{ display: "flex", gap: 8 }}>
@@ -1064,7 +1064,7 @@ export default function Project() {
         </div>
       </div>
 
-      <div className="glass-stack" style={{ marginTop: 22 }}>
+      <div className="glass-stack project-vendors-card" style={{ marginTop: 22 }}>
         <h3 style={{ fontFamily: "var(--font-display)" }}>Shortlisted vendors</h3>
         <div className="grid">
           {shortlistedVendors.map((v) => (
@@ -1086,7 +1086,7 @@ export default function Project() {
         </div>
       </div>
 
-      <div className="glass-stack" style={{ marginTop: 22 }}>
+      <div className="glass-stack project-products-card" style={{ marginTop: 22 }}>
         <h3 style={{ fontFamily: "var(--font-display)" }}>Curated products (DB)</h3>
         <div className="grid grid-3">
           {dbProducts.map((p) => (
@@ -1280,8 +1280,8 @@ export default function Project() {
         </div>
       )}
 
-      <div className="grid grid-2" style={{ marginTop: 22 }}>
-        <div className="glass-stack">
+      <div className="grid grid-2 project-tools-grid" style={{ marginTop: 22 }}>
+        <div className="glass-stack project-chat-card">
           <h3 style={{ fontFamily: "var(--font-display)" }}>Chatbot</h3>
           <form onSubmit={sendChat} className="grid">
             <input
@@ -1290,7 +1290,7 @@ export default function Project() {
               value={chat.message}
               onChange={(e) => setChat({ ...chat, message: e.target.value })}
             />
-            <button className="btn btn-accent2" type="submit">Ask</button>
+            <button className="btn btn-accent2" type="submit">Ask Nestie</button>
           </form>
           {chat.reply && (
             <div className="card" style={{ marginTop: 12, boxShadow: "none" }}>
@@ -1308,7 +1308,7 @@ export default function Project() {
           )}
         </div>
 
-        <div className="glass-stack">
+        <div className="glass-stack project-vision-card">
           <h3 style={{ fontFamily: "var(--font-display)" }}>Vision decor ideas</h3>
           <form onSubmit={runVision} className="grid">
             <input
@@ -1317,7 +1317,7 @@ export default function Project() {
               accept="image/*"
               onChange={(e) => setVision({ ...vision, file: e.target.files?.[0] || null })}
             />
-            <button className="btn btn-accent3" type="submit">Analyze image</button>
+            <button className="btn btn-accent3" type="submit">Analyze Image</button>
           </form>
           {vision.result && (
             <pre className="card" style={{ marginTop: 12, whiteSpace: "pre-wrap", boxShadow: "none" }}>

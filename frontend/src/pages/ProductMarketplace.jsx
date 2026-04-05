@@ -1,6 +1,8 @@
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { ProductsAPI } from "../api/endpoints";
+import AmbientCanvas from "../components/AmbientCanvas";
+import SiteFooter from "../components/SiteFooter";
 
 const WISHLIST_KEY = "dreamnest_wishlist_items";
 const PAGE_SIZE_DEFAULT = 9;
@@ -369,7 +371,7 @@ export default function ProductMarketplace() {
 
   if (!market) {
     return (
-      <div className="container">
+      <div className="container app-editorial-shell">
         <div className="glass-stack">
           <h2 style={{ fontFamily: "var(--font-display)" }}>Marketplace not ready</h2>
           <div className="muted">Generate recommendations from your project first.</div>
@@ -380,19 +382,25 @@ export default function ProductMarketplace() {
   }
 
   return (
-    <div className="container market-page">
-      <div className="nav">
+    <div className="container market-page app-editorial-shell marketplace-editorial-page workspace-shell">
+      <div className="nav app-editorial-nav">
         <div className="nav-brand">
           <span style={{ color: "var(--accent)" }}>Dream</span>Nest Marketplace
           <div className="nav-sub">{market.title} - {market.location}</div>
         </div>
         <div className="nav-actions">
-          <button className="btn btn-outline" onClick={() => nav("/wishlist")}>Wishlist</button>
+          <button className="btn btn-outline" onClick={() => nav("/wishlist")}>Open Wishlist</button>
           <button className="btn btn-outline" onClick={() => nav(`/project/${id}`)}>Back to project</button>
         </div>
       </div>
 
-      <div className="glass-stack market-head">
+      <div className="glass-stack market-head app-editorial-hero ambient-panel marketplace-hero-band">
+        <AmbientCanvas variant="gold" mode="panel" intensity={0.86} />
+        <div>
+          <div className="studio-kicker">Sourcing Board</div>
+          <h2 style={{ fontFamily: "var(--font-display)", margin: "8px 0 10px" }}>Budget-balanced product discovery for this room</h2>
+          <div className="muted">Compare stores, shortlist products, and preview items in-room without leaving the project workflow.</div>
+        </div>
         <div className="market-topline">
           <div className="market-kpis">
             <strong>{filtered.length} products</strong>
@@ -401,7 +409,7 @@ export default function ProductMarketplace() {
           <div className="market-store-chips">
             {stores.map((s) => (
               <span key={s} className="market-chip">
-                {s.toUpperCase()} · {storeCounts[s]}
+                {s.toUpperCase()} � {storeCounts[s]}
               </span>
             ))}
           </div>
@@ -474,7 +482,7 @@ export default function ProductMarketplace() {
         )}
       </div>
 
-      <div className="market-grid">
+      <div className="market-grid app-editorial-main marketplace-results-grid">
         {paged.map((p, idx) => {
           const url = normalizeUrl(p.product_url);
           const wished = Boolean(wishlistMap[url]);
@@ -501,7 +509,7 @@ export default function ProductMarketplace() {
                       window.open(url, "_blank", "noopener,noreferrer");
                     }}
                   >
-                    Buy now
+                    Buy Now
                   </button>
                   <button
                     className="btn btn-outline"
@@ -510,7 +518,7 @@ export default function ProductMarketplace() {
                       window.open(url, "_blank", "noopener,noreferrer");
                     }}
                   >
-                    Open product
+                    View Product
                   </button>
                   <button
                     className={`btn btn-outline ${wished ? "is-wish" : ""}`}
@@ -675,6 +683,9 @@ export default function ProductMarketplace() {
           </div>
         </div>
       )}
+      <SiteFooter />
     </div>
   );
 }
+
+

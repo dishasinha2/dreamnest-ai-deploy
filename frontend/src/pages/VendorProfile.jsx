@@ -1,6 +1,8 @@
 import { useEffect, useState } from "react";
+import { motion } from "framer-motion";
 import { useParams } from "react-router-dom";
 import { VendorsAPI } from "../api/endpoints";
+import SiteFooter from "../components/SiteFooter";
 import { useAuth } from "../hooks/useAuth";
 
 const BASE = import.meta.env.VITE_API_BASE || "http://localhost:5000";
@@ -42,18 +44,17 @@ export default function VendorProfile() {
   }
 
   return (
-    <div className="container">
-      <div className="nav">
-        <div className="nav-brand">
-          <span style={{ color: "var(--accent)" }}>Dream</span>Nest AI
-        </div>
+    <div className="container landing-shell page-shell-v2 vendor-profile-page-v2">
+      <motion.div initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.45 }}>
+      <div className="nav landing-nav page-nav-v2">
+        <div className="nav-brand landing-brand-v2">Dream Nest AI</div>
         <div className="nav-actions">
           <a className="btn btn-outline" href="/vendors">Back to Vendors</a>
           <a className="btn btn-outline" href="/feedback">Feedback</a>
         </div>
       </div>
 
-      <div className="card">
+      <div className="card landing-panel vendor-profile-hero-v2">
         <h2 style={{ fontFamily: "var(--font-display)" }}>{vendor.name}</h2>
         <div className="muted">{vendor.city} - {vendor.years_exp} yrs</div>
         <div className="muted">Rating {vendor.avg_rating || "-"} ({vendor.review_count || 0})</div>
@@ -133,6 +134,8 @@ export default function VendorProfile() {
           </div>
         </div>
       </div>
+      <SiteFooter />
+      </motion.div>
     </div>
   );
 }

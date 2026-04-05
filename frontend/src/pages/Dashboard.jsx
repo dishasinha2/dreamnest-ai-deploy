@@ -297,8 +297,8 @@ export default function Dashboard() {
   }
 
   return (
-    <div className="container studio-page workspace-shell">
-      <div className="nav studio-nav workspace-nav">
+    <div className="container studio-page workspace-shell app-editorial-shell dashboard-editorial-page">
+      <div className="nav studio-nav workspace-nav app-editorial-nav">
         <div className="nav-brand">
           <span style={{ color: "var(--accent)" }}>Dream</span>Nest AI
           <div className="nav-sub">Welcome{userName ? `, ${userName}` : ""}</div>
@@ -325,7 +325,7 @@ export default function Dashboard() {
         </div>
       </div>
 
-      <div className="card studio-header-band ambient-panel workspace-hero-band">
+      <div className="card studio-header-band ambient-panel workspace-hero-band app-editorial-hero">
         <AmbientCanvas variant="gold" />
         <div>
           <div className="studio-kicker">Interior Designer Workspace</div>
@@ -348,7 +348,7 @@ export default function Dashboard() {
         </div>
       </div>
 
-      <div className="dash-wrap">
+      <div className="dash-wrap app-editorial-main">
         <aside className="dash-side">
           <div className="card studio-side-card workspace-panel">
             <div className="panel-title">Project Snapshot</div>
@@ -400,7 +400,7 @@ export default function Dashboard() {
                 onChange={(e) => setSearchInput(e.target.value)}
               />
               <button className="btn btn-accent2 retrieval-btn" type="submit">
-                {searchLoading ? "Searching..." : "Retrieve"}
+                {searchLoading ? "Searching..." : "Search"}
               </button>
             </form>
             {searchResults.counts && (
@@ -462,10 +462,10 @@ export default function Dashboard() {
                   <span>{p.room_type} - {p.location_city}</span>
                   <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginTop: 4 }}>
                     <button className="btn btn-outline" onClick={() => nav(`/project/${p.id}`)}>
-                      Open
+                      Open Project
                     </button>
                     <button className="btn btn-outline" onClick={() => deleteProject(p.id)}>
-                      Delete
+                      Remove
                     </button>
                   </div>
                 </div>
@@ -775,7 +775,7 @@ export default function Dashboard() {
                   <path d="M4 12h16M14 6l6 6-6 6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
                 </svg>
               </button>
-              <button className="btn btn-outline" type="button" onClick={sendVisionFromChat}>Analyze image</button>
+              <button className="btn btn-outline" type="button" onClick={sendVisionFromChat}>Analyze Image</button>
             </div>
           </form>
         </div>
