@@ -18,6 +18,10 @@ import fs from "fs";
 
 const app = express();
 const corsOrigin = process.env.CORS_ORIGIN || "*";
+let dbReady = false;
+let dbError = "Database initialization pending";
+let dbInitPromise = null;
+
 app.use(
   cors({
     origin:
@@ -34,16 +38,18 @@ app.use("/uploads", express.static(uploadsDir));
 
 app.get("/", (_, res) => res.send("DreamNest AI API running"));
 app.get("/api/health", async (_, res) => {
-  let dbOk = true;
-  let dbError = "";
+  let dbOk = dbReady;
+  let dbErrorMessage = dbReady ? "" : dbError;
   try {
     const { db } = await import("./db.js");
     await db.query("SELECT 1");
+    dbOk = true;
+    if (dbReady) dbErrorMessage = "";
   } catch {
     dbOk = false;
-    dbError = "DB connection failed";
+    dbErrorMessage = dbError || "DB connection failed";
   }
-  res.json({ ok: true, db: dbOk, dbError });
+  res.status(dbOk ? 200 : 503).json({ ok: true, db: dbOk, dbError: dbErrorMessage });
 });
 
 app.use("/api/auth", authRoutes);
@@ -84,9 +90,38 @@ function listenWithFallback(port, attemptsLeft = 5) {
   });
 }
 
+async function initializeDatabase() {
+  if (dbInitPromise) return dbInitPromise;
+
+  dbInitPromise = (async () => {
+    let attempt = 0;
+
+    while (!dbReady) {
+      attempt += 1;
+      try {
+        await ensureCoreTables();
+        dbReady = true;
+        dbError = "";
+        console.log("Database ready");
+      } catch (err) {
+        dbReady = false;
+        dbError = err?.message || "Database initialization failed";
+        const delayMs = Math.min(30000, attempt * 5000);
+        console.error(`Database init attempt ${attempt} failed: ${dbError}`);
+        console.log(`Retrying database init in ${Math.round(delayMs / 1000)}s`);
+        await new Promise((resolve) => setTimeout(resolve, delayMs));
+      }
+    }
+  })().finally(() => {
+    if (!dbReady) dbInitPromise = null;
+  });
+
+  return dbInitPromise;
+}
+
 async function start() {
-  await ensureCoreTables();
   await listenWithFallback(basePort, 10);
+  void initializeDatabase();
 }
 
 start().catch((err) => {
