@@ -22,12 +22,37 @@ let dbReady = false;
 let dbError = "Database initialization pending";
 let dbInitPromise = null;
 
+function isAllowedOrigin(origin) {
+  if (!origin) return true;
+  if (corsOrigin === "*") return true;
+
+  const allowedOrigins = corsOrigin
+    .split(",")
+    .map((value) => value.trim())
+    .filter(Boolean);
+
+  if (allowedOrigins.includes(origin)) return true;
+
+  try {
+    const { hostname } = new URL(origin);
+    if (hostname === "localhost" || hostname === "127.0.0.1") return true;
+    if (hostname.endsWith(".vercel.app")) return true;
+  } catch {
+    return false;
+  }
+
+  return false;
+}
+
 app.use(
   cors({
-    origin:
-      corsOrigin === "*"
-        ? "*"
-        : corsOrigin.split(",").map((x) => x.trim()).filter(Boolean)
+    origin(origin, callback) {
+      if (isAllowedOrigin(origin)) {
+        callback(null, true);
+        return;
+      }
+      callback(new Error(`CORS blocked for origin ${origin || "unknown"}`));
+    }
   })
 );
 app.use(express.json({ limit: "2mb" }));
