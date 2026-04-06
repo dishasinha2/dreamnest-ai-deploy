@@ -1,11 +1,10 @@
 import { startTransition, useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
+import { assetUrl } from "../api/client";
 import { AIAPI, ClicksAPI, ProductsAPI, ProjectAPI, RequirementsAPI, VendorsAPI } from "../api/endpoints";
 import { useAuth } from "../hooks/useAuth";
 import AmbientCanvas from "../components/AmbientCanvas";
 import SiteFooter from "../components/SiteFooter";
-
-const BASE = import.meta.env.VITE_API_BASE || "http://localhost:5000";
 
 function asArray(v) {
   if (!v) return [];
@@ -1093,7 +1092,7 @@ export default function Project() {
             <div key={p.id} className="card" style={{ boxShadow: "none" }}>
               {p.image_url && (
                 <img
-                  src={p.image_url.startsWith("http") ? p.image_url : `${BASE}${p.image_url}`}
+                  src={assetUrl(p.image_url)}
                   alt={p.name}
                   loading="lazy"
                   decoding="async"

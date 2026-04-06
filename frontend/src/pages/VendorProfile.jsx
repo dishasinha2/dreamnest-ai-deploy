@@ -1,11 +1,10 @@
 import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import { useParams } from "react-router-dom";
+import { assetUrl } from "../api/client";
 import { VendorsAPI } from "../api/endpoints";
 import SiteFooter from "../components/SiteFooter";
 import { useAuth } from "../hooks/useAuth";
-
-const BASE = import.meta.env.VITE_API_BASE || "http://localhost:5000";
 
 function normalizeUrl(url) {
   if (!url) return "";
@@ -72,7 +71,7 @@ export default function VendorProfile() {
           <h3 style={{ fontFamily: "var(--font-display)" }}>Portfolio</h3>
           <div className="grid grid-3">
             {(vendor.portfolio || []).map((p) => {
-              const img = p.image_url?.startsWith("http") ? p.image_url : `${BASE}${p.image_url}`;
+              const img = assetUrl(p.image_url);
               return (
                 <img key={p.id} src={img} alt={p.title} loading="lazy" decoding="async" style={{ width: "100%", borderRadius: 14 }} />
               );

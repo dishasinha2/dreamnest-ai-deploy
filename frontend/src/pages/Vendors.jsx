@@ -1,11 +1,10 @@
 import { useEffect, useMemo, useState } from "react";
 import { motion } from "framer-motion";
+import { assetUrl } from "../api/client";
 import { VendorsAPI } from "../api/endpoints";
 import AmbientCanvas from "../components/AmbientCanvas";
 import SiteFooter from "../components/SiteFooter";
 import { useAuth } from "../hooks/useAuth";
-
-const BASE = import.meta.env.VITE_API_BASE || "http://localhost:5000";
 
 export default function Vendors() {
   const { token } = useAuth();
@@ -274,7 +273,7 @@ export default function Vendors() {
                     <div className="muted">Portfolio</div>
                     <div className="grid" style={{ gridTemplateColumns: "repeat(3,1fr)" }}>
                       {v.portfolio.map((p) => {
-                        const img = p.image_url?.startsWith("http") ? p.image_url : `${BASE}${p.image_url}`;
+                        const img = assetUrl(p.image_url);
                         return <img key={p.image_url} src={img} alt={p.title} loading="lazy" decoding="async" style={{ width: "100%", borderRadius: 12 }} />;
                       })}
                     </div>

@@ -1,8 +1,8 @@
-# DreamNest Deployment (Default Stack)
+# DreamNest Deployment
 
 ## Stack
 - Frontend: Vercel
-- Backend API: Render (Web Service)
+- Backend API: Railway
 - Database: Railway MySQL
 
 ## 1) Push code to GitHub
@@ -21,12 +21,11 @@ git push origin main
    - `MYSQLPASSWORD`
    - `MYSQLDATABASE`
 
-## 3) Deploy backend on Render
-1. Render -> New -> Web Service -> connect GitHub repo
-2. Root Directory: `backend`
-3. Build Command: `npm install`
-4. Start Command: `npm start`
-5. Add environment variables:
+## 3) Deploy backend on Railway
+1. Railway -> New Project -> Deploy from GitHub Repo
+2. Select this repository
+3. Railway will use the repo-level `railway.json` file to build and start from `backend`
+4. Add environment variables:
    - `NODE_ENV=production`
    - `PORT=5000`
    - `DB_HOST=<MYSQLHOST>`
@@ -34,7 +33,7 @@ git push origin main
    - `DB_USER=<MYSQLUSER>`
    - `DB_PASSWORD=<MYSQLPASSWORD>`
    - `DB_NAME=<MYSQLDATABASE>`
-   - `DB_SSL=true`
+   - `DB_SSL=false`
    - `JWT_SECRET=<long_random_secret>`
    - `ADMIN_SECRET=<admin_secret>`
    - `GROQ_API_KEY=<your_groq_key>`
@@ -42,19 +41,19 @@ git push origin main
    - `GROQ_VISION_MODEL=llama-3.2-90b-vision-preview`
    - `SERPAPI_KEY=<your_serpapi_key>`
    - `CORS_ORIGIN=<your_vercel_url>`
-6. Deploy and open health URL:
-   - `https://<render-service>.onrender.com/api/health`
+5. Deploy and open health URL:
+   - `https://<railway-service>.up.railway.app/api/health`
 
 ## 4) Deploy frontend on Vercel
 1. Vercel -> New Project -> import same GitHub repo
 2. Root Directory: `frontend`
 3. Framework: Vite
 4. Environment variable:
-   - `VITE_API_BASE=https://<render-service>.onrender.com`
+   - `VITE_API_BASE=https://<railway-service>.up.railway.app`
 5. Deploy
 
 ## 5) Final CORS update
-After Vercel deploy, set backend `CORS_ORIGIN` to:
+After Vercel deploy, set Railway backend `CORS_ORIGIN` to:
 - `https://<your-vercel-app>.vercel.app`
 
 Re-deploy backend.
@@ -69,5 +68,6 @@ Re-deploy backend.
 7. Open chatbot + Pinterest links
 
 ## Notes
-- First Render cold start can take time on free tier.
+- Do not include a trailing slash in `VITE_API_BASE`.
+- Test `https://<railway-service>.up.railway.app/api/health` before connecting Vercel.
 - If products load slowly, disable `Exact verified links only`.

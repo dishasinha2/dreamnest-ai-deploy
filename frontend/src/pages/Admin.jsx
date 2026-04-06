@@ -1,9 +1,8 @@
 import { useState } from "react";
 import { AdminAPI, ProductsAPI } from "../api/endpoints";
+import { assetUrl } from "../api/client";
 import AmbientCanvas from "../components/AmbientCanvas";
 import SiteFooter from "../components/SiteFooter";
-
-const BASE = import.meta.env.VITE_API_BASE || "http://localhost:5000";
 
 export default function Admin() {
   const [secret, setSecret] = useState("");
@@ -257,9 +256,7 @@ export default function Admin() {
             </div>
             <div className="grid">
               {liveItems.slice(0, 6).map((p, idx) => {
-                const img = p.image_url
-                  ? (p.image_url.startsWith("http") ? p.image_url : `${BASE}${p.image_url}`)
-                  : "";
+                const img = assetUrl(p.image_url);
                 return (
                   <div key={`${p.product_url}-${idx}`} className="card" style={{ boxShadow: "none" }}>
                     {img && <img src={img} alt={p.title} style={{ width: "100%", borderRadius: 12 }} />}
