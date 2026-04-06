@@ -674,9 +674,6 @@ export default function Project() {
   const timelinePct = timeline.length ? Math.round((timelineDone / timeline.length) * 100) : 0;
   const productPreview = liveProducts.slice(0, 3);
   const vendorPreview = vendors.slice(0, 3);
-  const roomSummary = asArray(project.room_type).slice(0, 2).join(", ") || "N/A";
-  const styleSummary = asArray(project.style_tags).slice(0, 2).join(", ") || "N/A";
-  const budgetSummary = new Intl.NumberFormat("en-IN").format(Number(project.budget_inr || 0));
 
   if (!token) {
     return (
@@ -696,6 +693,10 @@ export default function Project() {
       </div>
     );
   }
+
+  const roomSummary = asArray(project.room_type).slice(0, 2).join(", ") || "N/A";
+  const styleSummary = asArray(project.style_tags).slice(0, 2).join(", ") || "N/A";
+  const budgetSummary = new Intl.NumberFormat("en-IN").format(Number(project.budget_inr || 0));
 
   return (
     <div className="container studio-page workspace-shell app-editorial-shell project-editorial-page">
@@ -731,7 +732,7 @@ export default function Project() {
           <div className="studio-kicker">Project Design Board</div>
           <h2>{project.title}</h2>
           <p className="muted">
-            {roomSummary} in {project.location_city} · {project.area_sqft} sqft · Budget INR {budgetSummary}
+            {roomSummary} in {project.location_city} | {project.area_sqft} sqft | Budget INR {budgetSummary}
           </p>
         </div>
         <div className="studio-mini-metrics">
@@ -815,7 +816,7 @@ export default function Project() {
               <div key={v.id} className="sourcing-preview-item">
                 <div className="sourcing-preview-copy">
                   <strong>{v.name}</strong>
-                  <span>{v.city} - {v.years_exp || 0} yrs - Rating {v.avg_rating || "-"}</span>
+                  <span>{v.city} | {v.years_exp || 0} yrs | Rating {v.avg_rating || "-"}</span>
                   <span>{v.external ? "Live vendor" : "DreamNest vendor"}</span>
                 </div>
                 <button className="btn btn-outline" type="button" onClick={() => openVendorModal(v)}>
