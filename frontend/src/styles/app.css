@@ -3682,19 +3682,19 @@ body {
 
 .site-footer {
   margin-top: 24px;
-  padding: 36px 28px;
+  padding: 24px 22px;
   border: 1px solid color-mix(in srgb, var(--accent) 12%, var(--stroke));
   background: linear-gradient(180deg, rgba(37,33,24,.82), rgba(28,25,21,.74));
 }
 
 .site-footer-brand .nav-brand {
-  font-size: 28px;
+  font-size: 22px;
 }
 
 .site-footer-links a,
 .site-footer-meta {
-  font-size: 12px;
-  letter-spacing: .1em;
+  font-size: 10px;
+  letter-spacing: .08em;
   text-transform: uppercase;
 }
 
@@ -3831,7 +3831,7 @@ body {
 .about-editorial-process,
 .about-editorial-usecases {
   margin-top: 24px;
-  padding: 54px 48px;
+  padding: 38px 34px;
 }
 
 .about-editorial-band {
@@ -3868,8 +3868,8 @@ body {
   align-items: end;
   justify-content: space-between;
   gap: 22px;
-  margin-bottom: 42px;
-  padding-bottom: 22px;
+  margin-bottom: 28px;
+  padding-bottom: 16px;
   border-bottom: 1px solid rgba(255,255,255,.08);
 }
 
@@ -3889,28 +3889,30 @@ body {
 }
 
 .about-editorial-step {
-  padding: 38px 28px;
+  padding: 28px 22px;
   background: color-mix(in srgb, var(--bg0) 92%, black 8%);
 }
 
 .about-editorial-step-number {
-  margin-bottom: 18px;
+  margin-bottom: 12px;
   font-family: var(--font-display);
-  font-size: 52px;
+  font-size: 38px;
   color: color-mix(in srgb, var(--accent) 22%, transparent);
 }
 
 .about-editorial-usecase-grid {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 12px;
-  margin-top: 28px;
+  gap: 10px;
+  margin-top: 18px;
 }
 
 .about-editorial-usecase {
-  padding: 18px 18px;
+  padding: 13px 14px;
   border: 1px solid color-mix(in srgb, var(--accent) 10%, var(--stroke));
   background: rgba(255,255,255,.02);
+  font-size: 13px;
+  line-height: 1.45;
 }
 
 @media (max-width: 1100px) {
