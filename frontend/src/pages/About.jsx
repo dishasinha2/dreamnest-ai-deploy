@@ -49,19 +49,6 @@ export default function About() {
 
   return (
     <div className="container about-page about-page-v2">
-      <div className="landing-bg-layer landing-bg-mesh ambient-panel" aria-hidden="true">
-        <AmbientCanvas variant="gold" mode="full" intensity={0.92} />
-      </div>
-      <div className="landing-bg-layer landing-bg-particles ambient-panel" aria-hidden="true">
-        <AmbientCanvas variant="default" mode="full" intensity={1.05} />
-      </div>
-      <div className="landing-bg-layer landing-bg-glow ambient-panel" aria-hidden="true">
-        <AmbientCanvas variant="green" mode="full" intensity={0.78} />
-      </div>
-      <div className="landing-aura landing-aura-1" aria-hidden="true" />
-      <div className="landing-aura landing-aura-2" aria-hidden="true" />
-      <div className="landing-grid" aria-hidden="true" />
-
       <motion.div initial="hidden" animate="show" variants={stagger}>
         <motion.div variants={item} className="nav landing-nav about-nav-v2">
           <div className="nav-brand landing-brand-v2">
