@@ -9,6 +9,22 @@ const PAGE_SIZE_DEFAULT = 9;
 const AR_MODEL_KEY = "dreamnest_ar_models";
 const USER_PREF_KEY = "dreamnest_user_pref_v1";
 
+function sanitizeMarketItems(items) {
+  if (!Array.isArray(items)) return [];
+  return items
+    .filter((item) => item && typeof item === "object")
+    .map((item) => ({
+      ...item,
+      title: String(item.title || "Untitled product").trim(),
+      source: String(item.source || "store").trim(),
+      currency: String(item.currency || "INR").trim(),
+      product_url: normalizeUrl(item.product_url),
+      image_url: String(item.image_url || "").trim(),
+      recommended_for: String(item.recommended_for || "").trim()
+    }))
+    .filter((item) => item.product_url && item.product_url !== "#");
+}
+
 function normalizeUrl(url) {
   if (!url) return "#";
   const t = String(url).trim();
@@ -94,7 +110,7 @@ export default function ProductMarketplace() {
   } catch {
     market = null;
   }
-  const [products, setProducts] = useState(market?.items || []);
+  const [products, setProducts] = useState(() => sanitizeMarketItems(market?.items));
 
   const [query, setQuery] = useState("");
   const [store, setStore] = useState("all");
@@ -265,7 +281,7 @@ export default function ProductMarketplace() {
         if (!url || url === "#") continue;
         if (!mergedMap.has(url)) mergedMap.set(url, { ...item, product_url: url });
       }
-      const merged = Array.from(mergedMap.values()).slice(0, 220);
+      const merged = sanitizeMarketItems(Array.from(mergedMap.values()).slice(0, 220));
       setProducts(merged);
       localStorage.setItem(
         `dreamnest_market_${id}`,
@@ -386,7 +402,7 @@ export default function ProductMarketplace() {
       <div className="nav app-editorial-nav">
         <div className="nav-brand">
           <span style={{ color: "var(--accent)" }}>Dream</span>Nest Marketplace
-          <div className="nav-sub">{market.title} - {market.location}</div>
+          <div className="nav-sub">{market.title} | {market.location}</div>
         </div>
         <div className="nav-actions">
           <button className="btn btn-outline" onClick={() => nav("/wishlist")}>Open Wishlist</button>
@@ -483,14 +499,49 @@ export default function ProductMarketplace() {
       </div>
 
       <div className="market-grid app-editorial-main marketplace-results-grid">
-        {paged.map((p, idx) => {
+        {paged.length === 0 ? (
+          <article className="market-card market-card-empty">
+            <div className="market-body">
+              <h3>No products match these filters</h3>
+              <div className="muted">
+                Try clearing the store filter, changing the search, or load more products for this project.
+              </div>
+              <div className="market-actions">
+                <button
+                  className="btn btn-outline"
+                  onClick={() => {
+                    setQuery("");
+                    setStore("all");
+                    setSortBy("relevance");
+                    setPage(1);
+                  }}
+                >
+                  Reset filters
+                </button>
+                <button className="btn" onClick={loadMoreProducts} disabled={isLoadingMore}>
+                  {isLoadingMore ? "Loading more..." : "Load more"}
+                </button>
+              </div>
+            </div>
+          </article>
+        ) : paged.map((p, idx) => {
           const url = normalizeUrl(p.product_url);
           const wished = Boolean(wishlistMap[url]);
           const comparing = compare.some((x) => normalizeUrl(x.product_url) === url);
           return (
             <article key={`${url}-${idx}`} className="market-card">
               {p.image_url ? (
-                <img className="market-image" src={p.image_url} alt={p.title} loading="lazy" decoding="async" />
+                <img
+                  className="market-image"
+                  src={p.image_url}
+                  alt={p.title}
+                  loading="lazy"
+                  decoding="async"
+                  onError={(e) => {
+                    e.currentTarget.onerror = null;
+                    e.currentTarget.src = fallbackImage(p.title, p.source);
+                  }}
+                />
               ) : (
                 <img className="market-image" src={fallbackImage(p.title, p.source)} alt={p.title} loading="lazy" decoding="async" />
               )}
