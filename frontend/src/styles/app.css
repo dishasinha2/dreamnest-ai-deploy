@@ -4184,8 +4184,8 @@ body {
 }
 
 .dashboard-editorial-page .workspace-hero-band {
-  grid-template-columns: minmax(0, 1.15fr) minmax(420px, .85fr);
-  gap: 16px;
+  grid-template-columns: minmax(0, 1.2fr) minmax(320px, .72fr);
+  gap: 14px;
   padding: 18px 20px;
   border-radius: 28px;
   background:
@@ -4209,23 +4209,23 @@ body {
 
 .dashboard-editorial-page .studio-mini-metrics {
   align-self: stretch;
-  gap: 10px;
+  gap: 8px;
 }
 
 .dashboard-editorial-page .studio-mini-metric {
-  border-radius: 16px;
-  min-height: 112px;
-  padding: 12px 14px;
+  border-radius: 14px;
+  min-height: 82px;
+  padding: 10px 12px;
   background: linear-gradient(180deg, rgba(255,255,255,.05), rgba(255,255,255,.025));
 }
 
 .dashboard-editorial-page .studio-mini-metric span {
-  font-size: 11px;
-  letter-spacing: .08em;
+  font-size: 10px;
+  letter-spacing: .06em;
 }
 
 .dashboard-editorial-page .studio-mini-metric strong {
-  font-size: 20px;
+  font-size: 17px;
 }
 
 .about-page-v2,
