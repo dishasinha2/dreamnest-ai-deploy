@@ -4685,8 +4685,8 @@ body.chat-open::after {
 .marketplace-editorial-page .market-head h2,
 .admin-editorial-page .admin-hero-band h2,
 .vendors-editorial-page .vendors-hero-v2 h2 {
-  font-size: clamp(42px, 4.8vw, 66px);
-  line-height: .98;
+  font-size: clamp(28px, 3.2vw, 42px);
+  line-height: 1.02;
   max-width: 12ch;
 }
 
@@ -4703,6 +4703,78 @@ body.chat-open::after {
 
 .project-editorial-page .project-preview-grid {
   grid-template-columns: 1fr 1fr;
+}
+
+.project-editorial-page .workspace-hero-band {
+  padding: 16px 18px;
+}
+
+.project-editorial-page .workspace-hero-band .muted {
+  font-size: 13px;
+}
+
+.project-editorial-page .studio-mini-metric {
+  min-height: 78px;
+  padding: 10px 12px;
+}
+
+.project-editorial-page .studio-mini-metric strong {
+  font-size: 16px;
+}
+
+.project-editorial-page .project-preview-grid,
+.project-editorial-page .project-overview-grid,
+.project-editorial-page .project-tools-grid {
+  gap: 16px;
+}
+
+.project-editorial-page .sourcing-preview-card,
+.project-editorial-page .project-requirements-card,
+.project-editorial-page .project-planning-card,
+.project-editorial-page .project-concepts-card,
+.project-editorial-page .project-deliverables-card,
+.project-editorial-page .project-chat-card,
+.project-editorial-page .project-vision-card {
+  padding: 18px;
+  border-radius: 22px;
+}
+
+.project-editorial-page .section-head-row h3,
+.project-editorial-page .project-requirements-card h3,
+.project-editorial-page .project-planning-card h3,
+.project-editorial-page .project-concepts-card h3,
+.project-editorial-page .project-deliverables-card h3,
+.project-editorial-page .project-chat-card h3,
+.project-editorial-page .project-vision-card h3 {
+  font-size: 17px;
+}
+
+.project-editorial-page .section-head-row .muted,
+.project-editorial-page .project-requirements-card .muted,
+.project-editorial-page .project-planning-card .muted,
+.project-editorial-page .project-concepts-card .muted,
+.project-editorial-page .project-deliverables-card .muted,
+.project-editorial-page .project-chat-card .muted,
+.project-editorial-page .project-vision-card .muted {
+  font-size: 12px;
+  line-height: 1.55;
+}
+
+.project-editorial-page .sourcing-preview-item {
+  padding: 12px 14px;
+  border-radius: 16px;
+}
+
+.project-editorial-page .sourcing-preview-copy strong {
+  font-size: 14px;
+}
+
+.project-editorial-page .deliverables-kpi {
+  padding: 14px 16px;
+}
+
+.project-editorial-page .deliverables-kpi div[style*="font-size: 26"] {
+  font-size: 20px !important;
 }
 
 .marketplace-editorial-page .market-head {

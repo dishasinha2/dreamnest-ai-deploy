@@ -674,6 +674,9 @@ export default function Project() {
   const timelinePct = timeline.length ? Math.round((timelineDone / timeline.length) * 100) : 0;
   const productPreview = liveProducts.slice(0, 3);
   const vendorPreview = vendors.slice(0, 3);
+  const roomSummary = asArray(project.room_type).slice(0, 2).join(", ") || "N/A";
+  const styleSummary = asArray(project.style_tags).slice(0, 2).join(", ") || "N/A";
+  const budgetSummary = new Intl.NumberFormat("en-IN").format(Number(project.budget_inr || 0));
 
   if (!token) {
     return (
@@ -728,21 +731,21 @@ export default function Project() {
           <div className="studio-kicker">Project Design Board</div>
           <h2>{project.title}</h2>
           <p className="muted">
-            {project.room_type} in {project.location_city} | {project.area_sqft} sqft | Budget INR {project.budget_inr}
+            {roomSummary} in {project.location_city} · {project.area_sqft} sqft · Budget INR {budgetSummary}
           </p>
         </div>
         <div className="studio-mini-metrics">
           <div className="studio-mini-metric">
-            <span>Room Type</span>
+            <span>Progress</span>
+            <strong>{progress?.percent ?? 0}%</strong>
+          </div>
+          <div className="studio-mini-metric">
+            <span>Room</span>
             <strong>{asArray(project.room_type).slice(0, 1)[0] || "N/A"}</strong>
           </div>
           <div className="studio-mini-metric">
-            <span>Styles</span>
-            <strong>{asArray(project.style_tags).slice(0, 2).join(", ") || "N/A"}</strong>
-          </div>
-          <div className="studio-mini-metric">
-            <span>Live Sources</span>
-            <strong>eCom + Vendors</strong>
+            <span>Style</span>
+            <strong>{styleSummary}</strong>
           </div>
         </div>
       </div>
@@ -831,26 +834,18 @@ export default function Project() {
       </div>
 
       <div className="grid grid-2 project-overview-grid" style={{ marginTop: 22 }}>
-        <div className="glass-stack workspace-panel project-summary-card">
-          <div style={{ fontFamily: "var(--font-display)", fontSize: 22 }}>{project.title}</div>
-          <div className="muted">
-            {project.room_type} - {project.location_city} - {project.area_sqft} sqft - Budget INR {project.budget_inr}
-          </div>
+        <div className="glass-stack workspace-panel project-requirements-card">
+          <h3 style={{ fontFamily: "var(--font-display)" }}>Requirements</h3>
           {progress && (
-            <div style={{ marginTop: 12 }}>
-              <div className="muted">Progress: {progress.percent}%</div>
-              <div className="stats-grid compact-stats" style={{ marginTop: 10 }}>
-                {progress.steps.map((s) => (
-                  <div key={s.key} className="stat-card">
-                    <div className="muted">{s.label}</div>
-                    <div className="stat-number">{s.done ? "Done" : "Pending"}</div>
-                  </div>
-                ))}
-              </div>
+            <div className="stats-grid compact-stats" style={{ marginBottom: 12 }}>
+              {progress.steps.map((s) => (
+                <div key={s.key} className="stat-card">
+                  <div className="muted">{s.label}</div>
+                  <div className="stat-number">{s.done ? "Done" : "Pending"}</div>
+                </div>
+              ))}
             </div>
           )}
-        </div>        <div className="glass-stack workspace-panel project-requirements-card">
-          <h3 style={{ fontFamily: "var(--font-display)" }}>Requirements</h3>
           <form onSubmit={addRequirements} className="grid">
             <textarea className="textarea" placeholder="Notes" value={reqForm.notes} onChange={(e) => setReqForm({ ...reqForm, notes: e.target.value })} />
             <input className="input" placeholder="Must haves (comma separated)" value={reqForm.must_haves} onChange={(e) => setReqForm({ ...reqForm, must_haves: e.target.value })} />
@@ -1060,54 +1055,6 @@ export default function Project() {
               ))}
             </div>
           </div>
-        </div>
-      </div>
-
-      <div className="glass-stack project-vendors-card" style={{ marginTop: 22 }}>
-        <h3 style={{ fontFamily: "var(--font-display)" }}>Shortlisted vendors</h3>
-        <div className="grid">
-          {shortlistedVendors.map((v) => (
-            <div key={v.id} className="card" style={{ boxShadow: "none" }}>
-              <div style={{ fontFamily: "var(--font-display)" }}>{v.name}</div>
-              <div className="muted">{v.city} - {v.years_exp} yrs</div>
-              <div className="muted">Rating {v.avg_rating || "-"} ({v.review_count || 0})</div>
-              <button className="btn btn-outline" type="button" onClick={() => openVendorModal(v)}>
-                View more
-              </button>
-              {v.website && (
-                <a className="btn btn-outline" href={normalizeUrl(v.website)} target="_blank" rel="noreferrer">
-                  Visit site
-                </a>
-              )}
-            </div>
-          ))}
-          {!shortlistedVendors.length && <div className="muted">No shortlisted vendors yet.</div>}
-        </div>
-      </div>
-
-      <div className="glass-stack project-products-card" style={{ marginTop: 22 }}>
-        <h3 style={{ fontFamily: "var(--font-display)" }}>Curated products (DB)</h3>
-        <div className="grid grid-3">
-          {dbProducts.map((p) => (
-            <div key={p.id} className="card" style={{ boxShadow: "none" }}>
-              {p.image_url && (
-                <img
-                  src={assetUrl(p.image_url)}
-                  alt={p.name}
-                  loading="lazy"
-                  decoding="async"
-                  style={{ width: "100%", borderRadius: 12 }}
-                />
-              )}
-              <div style={{ fontFamily: "var(--font-display)", marginTop: 8 }}>{p.name}</div>
-              <div className="muted">INR {p.price_inr || "-"}</div>
-              <div style={{ display: "flex", gap: 8 }}>
-                <button className="btn btn-outline" onClick={() => openDbProduct(p)}>View</button>
-                <button className="btn" onClick={() => shortlist(p.id)}>Shortlist</button>
-              </div>
-            </div>
-          ))}
-          {!dbProducts.length && <div className="muted">No products in DB yet. Use Admin to ingest.</div>}
         </div>
       </div>
 
