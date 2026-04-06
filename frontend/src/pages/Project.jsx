@@ -765,7 +765,7 @@ export default function Project() {
           </div>
           <div className="sourcing-preview-list">
             {productPreview.map((p, idx) => (
-              <div key={`${p.product_url}-${idx}`} className="sourcing-preview-item">
+              <div key={`${p.product_url}-${idx}`} className="sourcing-preview-item sourcing-preview-item-product">
                 {p.image_url && (
                   <img
                     src={p.image_url}
@@ -813,7 +813,7 @@ export default function Project() {
           </div>
           <div className="sourcing-preview-list">
             {vendorPreview.map((v) => (
-              <div key={v.id} className="sourcing-preview-item">
+              <div key={v.id} className="sourcing-preview-item sourcing-preview-item-vendor">
                 <div className="sourcing-preview-copy">
                   <strong>{v.name}</strong>
                   <span>{v.city} | {v.years_exp || 0} yrs | Rating {v.avg_rating || "-"}</span>

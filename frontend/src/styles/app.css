@@ -2854,40 +2854,48 @@ pre { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liber
   margin-bottom: 12px;
 }
 .sourcing-preview-card {
-  min-height: 320px;
+  min-height: 260px;
 }
 .sourcing-preview-list {
   display: grid;
-  gap: 12px;
+  gap: 10px;
 }
 .sourcing-preview-item {
   border: 1px solid var(--stroke);
-  border-radius: 14px;
+  border-radius: 12px;
   background: rgba(255,255,255,.04);
-  padding: 12px;
+  padding: 10px 12px;
   display: grid;
-  grid-template-columns: 92px minmax(0, 1fr) auto;
-  gap: 12px;
+  gap: 10px;
   align-items: center;
 }
+.sourcing-preview-item-product {
+  grid-template-columns: 72px minmax(0, 1fr) auto;
+}
+.sourcing-preview-item-vendor {
+  grid-template-columns: minmax(0, 1fr) auto;
+}
 .sourcing-preview-thumb {
-  width: 92px;
+  width: 72px;
   aspect-ratio: 1 / 1;
-  border-radius: 12px;
+  border-radius: 10px;
   object-fit: cover;
 }
 .sourcing-preview-copy {
   display: grid;
-  gap: 4px;
+  gap: 2px;
   min-width: 0;
 }
 .sourcing-preview-copy strong {
   font-family: var(--font-display);
-  font-size: 18px;
+  font-size: 15px;
+  line-height: 1.15;
 }
 .sourcing-preview-copy span {
   color: var(--muted);
   overflow-wrap: anywhere;
+  font-size: 12px;
+  line-height: 1.4;
 }
 
 .deliverables-summary {
@@ -4761,12 +4769,17 @@ body.chat-open::after {
 }
 
 .project-editorial-page .sourcing-preview-item {
-  padding: 12px 14px;
-  border-radius: 16px;
+  padding: 10px 12px;
+  border-radius: 14px;
 }
 
 .project-editorial-page .sourcing-preview-copy strong {
   font-size: 14px;
+}
+
+.project-editorial-page .sourcing-preview-card .btn {
+  padding: 8px 14px;
+  font-size: 9px;
 }
 
 .project-editorial-page .deliverables-kpi {
