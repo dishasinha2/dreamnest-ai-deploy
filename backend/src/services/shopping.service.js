@@ -9,7 +9,7 @@ const PRODUCT_FALLBACKS_BASE = [
     currency: "INR",
     source: "IKEA",
     product_url: "https://www.ikea.com/in/en/p/klippan-2-seat-sofa-vissle-grey-s49010615/",
-    image_url: null,
+    image_url: "https://images.unsplash.com/photo-1505693416388-ac5ce068fe85?q=80&w=1200&auto=format&fit=crop",
     tags: ["sofa", "couch", "living", "furniture"]
   },
   {
@@ -18,7 +18,7 @@ const PRODUCT_FALLBACKS_BASE = [
     currency: "INR",
     source: "IKEA",
     product_url: "https://www.ikea.com/in/en/p/lack-coffee-table-black-brown-20352987/",
-    image_url: null,
+    image_url: "https://images.unsplash.com/photo-1538688525198-9b88f6f53126?q=80&w=1200&auto=format&fit=crop",
     tags: ["table", "coffee", "living", "furniture"]
   },
   {
@@ -27,7 +27,7 @@ const PRODUCT_FALLBACKS_BASE = [
     currency: "INR",
     source: "IKEA",
     product_url: "https://www.ikea.com/in/en/p/lohals-rug-flatwoven-natural-50511287/",
-    image_url: null,
+    image_url: "https://images.unsplash.com/photo-1505693416388-ac5ce068fe85?q=80&w=1200&auto=format&fit=crop",
     tags: ["rug", "carpet", "decor", "living", "bedroom"]
   },
   {
@@ -36,7 +36,7 @@ const PRODUCT_FALLBACKS_BASE = [
     currency: "INR",
     source: "IKEA",
     product_url: "https://www.ikea.com/in/en/p/nymane-table-lamp-anthracite-10595632/",
-    image_url: null,
+    image_url: "https://images.unsplash.com/photo-1513694203232-719a280e022f?q=80&w=1200&auto=format&fit=crop",
     tags: ["lamp", "light", "lighting", "decor"]
   },
   {
@@ -45,7 +45,7 @@ const PRODUCT_FALLBACKS_BASE = [
     currency: "INR",
     source: "IKEA",
     product_url: "https://www.ikea.com/in/en/p/fejka-artificial-potted-plant-indoor-outdoor-monstera-20433944/",
-    image_url: null,
+    image_url: "https://images.unsplash.com/photo-1485955900006-10f4d324d411?q=80&w=1200&auto=format&fit=crop",
     tags: ["plant", "decor", "green", "balcony"]
   },
   {
@@ -54,7 +54,7 @@ const PRODUCT_FALLBACKS_BASE = [
     currency: "INR",
     source: "Flipkart",
     product_url: "https://www.flipkart.com/green-soul-seoul-mid-back-mesh-office-adjustable-chair/p/itmf3zhw7uyhqunc",
-    image_url: null,
+    image_url: "https://images.unsplash.com/photo-1505843513577-22bb7d21e455?q=80&w=1200&auto=format&fit=crop",
     tags: ["chair", "office", "furniture"]
   },
   {
@@ -63,7 +63,7 @@ const PRODUCT_FALLBACKS_BASE = [
     currency: "INR",
     source: "Flipkart",
     product_url: "https://www.flipkart.com/hometown-engineered-wood-tv-entertainment-unit/p/itm0a9f5a8ecf5c8",
-    image_url: null,
+    image_url: "https://images.unsplash.com/photo-1582582429416-47d89477f0e0?q=80&w=1200&auto=format&fit=crop",
     tags: ["tv", "living", "furniture", "storage"]
   },
   {
@@ -72,7 +72,7 @@ const PRODUCT_FALLBACKS_BASE = [
     currency: "INR",
     source: "Flipkart",
     product_url: "https://www.flipkart.com/sleepyhead-metal-floor-lamp/p/itm9dbe9b9ebf6cc",
-    image_url: null,
+    image_url: "https://images.unsplash.com/photo-1540932239986-30128078f3c5?q=80&w=1200&auto=format&fit=crop",
     tags: ["lamp", "light", "lighting", "decor"]
   },
   {
@@ -81,7 +81,7 @@ const PRODUCT_FALLBACKS_BASE = [
     currency: "INR",
     source: "Myntra",
     product_url: "https://www.myntra.com/search?q=pendant%20light",
-    image_url: null,
+    image_url: "https://images.unsplash.com/photo-1519710164239-da123dc03ef4?q=80&w=1200&auto=format&fit=crop",
     tags: ["light", "lighting", "pendant", "decor"]
   },
   {
@@ -90,7 +90,7 @@ const PRODUCT_FALLBACKS_BASE = [
     currency: "INR",
     source: "Myntra",
     product_url: "https://www.myntra.com/search?q=rugs",
-    image_url: null,
+    image_url: "https://images.unsplash.com/photo-1575414003591-ece8d0416c7a?q=80&w=1200&auto=format&fit=crop",
     tags: ["rug", "carpet", "decor", "living"]
   },
   {
@@ -99,7 +99,7 @@ const PRODUCT_FALLBACKS_BASE = [
     currency: "INR",
     source: "Myntra",
     product_url: "https://www.myntra.com/search?q=cushion%20covers",
-    image_url: null,
+    image_url: "https://images.unsplash.com/photo-1517705008128-361805f42e86?q=80&w=1200&auto=format&fit=crop",
     tags: ["cushion", "soft", "furnishing", "decor"]
   },
   {
@@ -108,7 +108,7 @@ const PRODUCT_FALLBACKS_BASE = [
     currency: "INR",
     source: "Flipkart",
     product_url: "https://www.flipkart.com/wakefit-engineered-wood-queen-box-bed/p/itm2c3f22b30aaf2",
-    image_url: null,
+    image_url: "https://images.unsplash.com/photo-1505693416388-ac5ce068fe85?q=80&w=1200&auto=format&fit=crop",
     tags: ["bed", "bedroom", "furniture"]
   },
   {
@@ -117,7 +117,7 @@ const PRODUCT_FALLBACKS_BASE = [
     currency: "INR",
     source: "Flipkart",
     product_url: "https://www.flipkart.com/home-centre-4-seater-dining-set/p/itm6e5f6b4d9a172",
-    image_url: null,
+    image_url: "https://images.unsplash.com/photo-1449247613801-ab06418e2861?q=80&w=1200&auto=format&fit=crop",
     tags: ["dining", "table", "furniture"]
   }
 ];
@@ -217,7 +217,7 @@ function buildBulkFallbacks() {
         currency: "INR",
         source: s.name,
         product_url: buildStoreUrl(s.name, `${s.name} ${k.key}`),
-        image_url: null,
+        image_url: placeholderImage(`${s.name} ${k.key}`, s.name),
         tags: k.tags
       });
     });
@@ -277,31 +277,50 @@ function isBadLanding(url) {
 const CATEGORY_IMAGE_POOLS = {
   sofa: [
     "https://images.unsplash.com/photo-1493663284031-b7e3aefcae8e?q=80&w=1200&auto=format&fit=crop",
-    "https://images.unsplash.com/photo-1505691938895-1758d7feb511?q=80&w=1200&auto=format&fit=crop"
+    "https://images.unsplash.com/photo-1505693416388-ac5ce068fe85?q=80&w=1200&auto=format&fit=crop",
+    "https://images.unsplash.com/photo-1555041469-a586c61ea9bc?q=80&w=1200&auto=format&fit=crop"
   ],
   table: [
     "https://images.unsplash.com/photo-1505693416388-ac5ce068fe85?q=80&w=1200&auto=format&fit=crop",
-    "https://images.unsplash.com/photo-1507473885765-e6ed057f782c?q=80&w=1200&auto=format&fit=crop"
+    "https://images.unsplash.com/photo-1538688525198-9b88f6f53126?q=80&w=1200&auto=format&fit=crop",
+    "https://images.unsplash.com/photo-1449247613801-ab06418e2861?q=80&w=1200&auto=format&fit=crop"
   ],
   bed: [
     "https://images.unsplash.com/photo-1505693416388-ac5ce068fe85?q=80&w=1200&auto=format&fit=crop",
-    "https://images.unsplash.com/photo-1505693533128-c7c8d8a3d7d3?q=80&w=1200&auto=format&fit=crop"
+    "https://images.unsplash.com/photo-1505693533128-c7c8d8a3d7d3?q=80&w=1200&auto=format&fit=crop",
+    "https://images.unsplash.com/photo-1505693416388-ac5ce068fe85?q=80&w=1200&auto=format&fit=crop"
   ],
   chair: [
     "https://images.unsplash.com/photo-1524758631624-e2822e304c36?q=80&w=1200&auto=format&fit=crop",
-    "https://images.unsplash.com/photo-1484101403633-562f891dc89a?q=80&w=1200&auto=format&fit=crop"
+    "https://images.unsplash.com/photo-1484101403633-562f891dc89a?q=80&w=1200&auto=format&fit=crop",
+    "https://images.unsplash.com/photo-1505843513577-22bb7d21e455?q=80&w=1200&auto=format&fit=crop"
   ],
   lighting: [
     "https://images.unsplash.com/photo-1519710164239-da123dc03ef4?q=80&w=1200&auto=format&fit=crop",
-    "https://images.unsplash.com/photo-1502005097973-6a7082348e28?q=80&w=1200&auto=format&fit=crop"
+    "https://images.unsplash.com/photo-1502005097973-6a7082348e28?q=80&w=1200&auto=format&fit=crop",
+    "https://images.unsplash.com/photo-1540932239986-30128078f3c5?q=80&w=1200&auto=format&fit=crop"
+  ],
+  rug: [
+    "https://images.unsplash.com/photo-1575414003591-ece8d0416c7a?q=80&w=1200&auto=format&fit=crop",
+    "https://images.unsplash.com/photo-1513694203232-719a280e022f?q=80&w=1200&auto=format&fit=crop"
+  ],
+  plant: [
+    "https://images.unsplash.com/photo-1485955900006-10f4d324d411?q=80&w=1200&auto=format&fit=crop",
+    "https://images.unsplash.com/photo-1466692476868-aef1dfb1e735?q=80&w=1200&auto=format&fit=crop"
+  ],
+  storage: [
+    "https://images.unsplash.com/photo-1582582429416-47d89477f0e0?q=80&w=1200&auto=format&fit=crop",
+    "https://images.unsplash.com/photo-1505693416388-ac5ce068fe85?q=80&w=1200&auto=format&fit=crop"
   ],
   decor: [
     "https://images.unsplash.com/photo-1505692794403-55c6f65f6e68?q=80&w=1200&auto=format&fit=crop",
-    "https://images.unsplash.com/photo-1519710164239-da123dc03ef4?q=80&w=1200&auto=format&fit=crop"
+    "https://images.unsplash.com/photo-1519710164239-da123dc03ef4?q=80&w=1200&auto=format&fit=crop",
+    "https://images.unsplash.com/photo-1517705008128-361805f42e86?q=80&w=1200&auto=format&fit=crop"
   ],
   default: [
     "https://images.unsplash.com/photo-1493663284031-b7e3aefcae8e?q=80&w=1200&auto=format&fit=crop",
-    "https://images.unsplash.com/photo-1505691938895-1758d7feb511?q=80&w=1200&auto=format&fit=crop"
+    "https://images.unsplash.com/photo-1505691938895-1758d7feb511?q=80&w=1200&auto=format&fit=crop",
+    "https://images.unsplash.com/photo-1555041469-a586c61ea9bc?q=80&w=1200&auto=format&fit=crop"
   ]
 };
 
@@ -314,11 +333,14 @@ function hashString(input) {
 function pickCategory(title = "") {
   const t = String(title).toLowerCase();
   if (/(sofa|couch|recliner|ottoman|pouf|bean bag)/.test(t)) return "sofa";
+  if (/(tv unit|entertainment unit|bookshelf|shelf|wardrobe|storage|cabinet|drawer|shoe rack|book rack)/.test(t)) return "storage";
   if (/(table|desk|console|dining|study)/.test(t)) return "table";
   if (/(bed|mattress|duvet|bedsheet|bedside)/.test(t)) return "bed";
   if (/(chair|stool)/.test(t)) return "chair";
   if (/(lamp|light|lighting|pendant|ceiling)/.test(t)) return "lighting";
-  if (/(rug|carpet|decor|mirror|art|clock|curtain|cushion|plant)/.test(t)) return "decor";
+  if (/(rug|carpet|mat)/.test(t)) return "rug";
+  if (/(plant|planter)/.test(t)) return "plant";
+  if (/(decor|mirror|art|clock|curtain|cushion)/.test(t)) return "decor";
   return "default";
 }
 
@@ -332,7 +354,14 @@ function placeholderImage(title, source) {
 function fallbackExactProducts(q, preferredStores) {
   const tokenSet = new Set(String(q || "").toLowerCase().split(/[^a-z0-9]+/g).filter(Boolean));
   const scored = PRODUCT_FALLBACKS.map((item) => {
-    const score = item.tags.reduce((acc, t) => acc + (tokenSet.has(t) ? 2 : 0), 0);
+    const titleTokens = String(item.title || "").toLowerCase().split(/[^a-z0-9]+/g).filter(Boolean);
+    const titleScore = titleTokens.reduce((acc, t) => acc + (tokenSet.has(t) ? 3 : 0), 0);
+    const tagScore = item.tags.reduce((acc, t) => acc + (tokenSet.has(t) ? 2 : 0), 0);
+    let roomPenalty = 0;
+    if (tokenSet.has("living") && titleTokens.some((t) => ["office", "study", "bed", "wardrobe"].includes(t))) roomPenalty -= 6;
+    if ((tokenSet.has("study") || tokenSet.has("office")) && titleTokens.some((t) => ["sofa", "rug", "bed"].includes(t))) roomPenalty -= 5;
+    if (tokenSet.has("bedroom") && titleTokens.some((t) => ["tv", "office", "dining"].includes(t))) roomPenalty -= 6;
+    const score = titleScore + tagScore + roomPenalty;
     return { ...item, score };
   }).sort(
     (a, b) =>

@@ -24,7 +24,62 @@ function detectProductCategory(product) {
   return "furniture";
 }
 
-function buildBudgetBalancedList(items, maxItems = 220) {
+function tokenizeText(value) {
+  return String(value || "")
+    .toLowerCase()
+    .split(/[^a-z0-9]+/g)
+    .filter(Boolean);
+}
+
+function buildRecommendationContext(project, latestReq = {}) {
+  const rooms = asArray(project?.room_type).map((r) => r.replaceAll("_", " ").toLowerCase());
+  const styles = asArray(project?.style_tags).map((s) => s.replaceAll("_", " ").toLowerCase());
+  const mustHaves = asArray(latestReq?.must_haves).map((s) => s.toLowerCase());
+  const colors = asArray(latestReq?.colors).map((s) => s.toLowerCase());
+  const notes = tokenizeText(latestReq?.notes || "");
+
+  return {
+    rooms,
+    styles,
+    mustHaves,
+    colors,
+    notes
+  };
+}
+
+function scoreProductForContext(item, context) {
+  const text = `${item?.title || ""} ${item?.recommended_for || ""} ${item?.source || ""}`.toLowerCase();
+  let score = 0;
+
+  for (const room of context.rooms) {
+    const compact = room.replace(/\s+/g, "");
+    if (text.includes(room)) score += 9;
+    if (compact && text.includes(compact)) score += 4;
+  }
+  for (const style of context.styles) {
+    if (style && text.includes(style)) score += 6;
+  }
+  for (const need of context.mustHaves) {
+    const words = tokenizeText(need);
+    if (words.length && words.every((word) => text.includes(word))) score += 10;
+    else score += words.reduce((acc, word) => acc + (text.includes(word) ? 2 : 0), 0);
+  }
+  for (const color of context.colors) {
+    if (color && text.includes(color)) score += 4;
+  }
+  score += context.notes.reduce((acc, word) => acc + (text.includes(word) ? 1 : 0), 0);
+
+  if (context.rooms.some((room) => room.includes("living")) && /(office|study|desk|workstation|wardrobe|bedroom|bed\b)/.test(text)) score -= 7;
+  if (context.rooms.some((room) => room.includes("bed")) && /(tv unit|dining|office chair|study table|workstation)/.test(text)) score -= 7;
+  if (context.rooms.some((room) => room.includes("study") || room.includes("office")) && /(sofa|rug flatwoven|bedside|duvet|bedsheet)/.test(text)) score -= 5;
+  if (/(chair|sofa|table|lamp|rug|storage|mirror|plant|shelf|unit)/.test(text)) score += 2;
+  if (item?.image_url) score += 2;
+  if (item?.rating) score += Number(item.rating) / 2;
+
+  return score;
+}
+
+function buildBudgetBalancedList(items, context, maxItems = 220) {
   const buckets = {
     furniture: [],
     lighting: [],
@@ -33,6 +88,10 @@ function buildBudgetBalancedList(items, maxItems = 220) {
   };
   for (const item of items) {
     buckets[detectProductCategory(item)].push(item);
+  }
+
+  for (const key of Object.keys(buckets)) {
+    buckets[key].sort((a, b) => scoreProductForContext(b, context) - scoreProductForContext(a, context));
   }
 
   const targets = {
@@ -57,7 +116,9 @@ function buildBudgetBalancedList(items, maxItems = 220) {
     }
   }
 
-  return out.slice(0, maxItems);
+  return out
+    .sort((a, b) => scoreProductForContext(b, context) - scoreProductForContext(a, context))
+    .slice(0, maxItems);
 }
 
 export default function Project() {
@@ -343,7 +404,11 @@ export default function Project() {
         }
       }
 
-      const personalized = buildBudgetBalancedList(diversified, 220);
+      const personalized = buildBudgetBalancedList(
+        diversified,
+        buildRecommendationContext(project, latestReq),
+        220
+      );
 
       startTransition(() => {
         setLiveProducts(personalized);

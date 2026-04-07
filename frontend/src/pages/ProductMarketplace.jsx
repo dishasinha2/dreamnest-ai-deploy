@@ -1,7 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { ProductsAPI } from "../api/endpoints";
-import AmbientCanvas from "../components/AmbientCanvas";
 import SiteFooter from "../components/SiteFooter";
 
 const WISHLIST_KEY = "dreamnest_wishlist_items";
@@ -410,11 +409,10 @@ export default function ProductMarketplace() {
         </div>
       </div>
 
-      <div className="glass-stack market-head app-editorial-hero ambient-panel marketplace-hero-band">
-        <AmbientCanvas variant="gold" mode="panel" intensity={0.86} />
+      <div className="glass-stack market-head app-editorial-hero marketplace-hero-band">
         <div>
           <div className="studio-kicker">Sourcing Board</div>
-          <h2 style={{ fontFamily: "var(--font-display)", margin: "8px 0 10px" }}>Budget-balanced product discovery for this room</h2>
+          <h2 style={{ fontFamily: "var(--font-display)", margin: "8px 0 10px" }}>Budget-balanced product discovery</h2>
           <div className="muted">Compare stores, shortlist products, and preview items in-room without leaving the project workflow.</div>
         </div>
         <div className="market-topline">
@@ -430,6 +428,8 @@ export default function ProductMarketplace() {
             ))}
           </div>
         </div>
+      </div>
+      <div className="glass-stack market-filters-panel">
         <div className="market-pref-row">
           <input
             className="input"
