@@ -146,7 +146,8 @@ export default function Project() {
   const [notice, setNotice] = useState("");
   const [marketPrefs, setMarketPrefs] = useState({
     store_priority: "ikea,flipkart,myntra,amazon,pepperfry,urbanladder,meesho,ebay",
-    exact_only: false
+    exact_only: false,
+    personalization_strength: "balanced"
   });
   const [checkMap, setCheckMap] = useState({});
   const [timelineMap, setTimelineMap] = useState({});
@@ -347,7 +348,19 @@ export default function Project() {
           }
         }
       }
-      const queries = uniqLimit([...aiQueries, ...generated], 10);
+      const baseRoom = rooms[0] || "room";
+      const extra = [
+        ...mustHaves.map((m) => `${m} ${baseRoom}`),
+        ...colors.map((c) => `${c} ${baseRoom} furniture`),
+        ...styles.map((s) => `${s} ${baseRoom} furniture`)
+      ];
+      const maxQueries =
+        marketPrefs.personalization_strength === "strong"
+          ? 16
+          : marketPrefs.personalization_strength === "light"
+          ? 8
+          : 12;
+      const queries = uniqLimit([...aiQueries, ...generated, ...extra], maxQueries);
       setNotice(`AI generated ${queries.length} smart shopping queries from requirements...`);
 
       const responses = await Promise.all(
@@ -947,6 +960,19 @@ export default function Project() {
                 onChange={(e) => setMarketPrefs((p) => ({ ...p, store_priority: e.target.value }))}
                 placeholder="Store priority: ikea,flipkart,myntra,amazon,pepperfry,urbanladder,meesho,ebay"
               />
+              <label className="muted" style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                Personalization strength
+                <select
+                  className="select"
+                  value={marketPrefs.personalization_strength}
+                  onChange={(e) => setMarketPrefs((p) => ({ ...p, personalization_strength: e.target.value }))}
+                  style={{ maxWidth: 160 }}
+                >
+                  <option value="light">Light</option>
+                  <option value="balanced">Balanced</option>
+                  <option value="strong">Strong</option>
+                </select>
+              </label>
               <label className="muted" style={{ display: "flex", alignItems: "center", gap: 8 }}>
                 <input
                   type="checkbox"

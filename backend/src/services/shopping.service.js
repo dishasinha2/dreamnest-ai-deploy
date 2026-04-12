@@ -183,6 +183,83 @@ function toTitle(s) {
   return String(s).replace(/\b\w/g, (m) => m.toUpperCase());
 }
 
+const CATEGORY_IMAGE_POOLS = {
+  sofa: [
+    "https://images.unsplash.com/photo-1493663284031-b7e3aefcae8e?q=80&w=1200&auto=format&fit=crop",
+    "https://images.unsplash.com/photo-1505693416388-ac5ce068fe85?q=80&w=1200&auto=format&fit=crop",
+    "https://images.unsplash.com/photo-1555041469-a586c61ea9bc?q=80&w=1200&auto=format&fit=crop"
+  ],
+  table: [
+    "https://images.unsplash.com/photo-1505693416388-ac5ce068fe85?q=80&w=1200&auto=format&fit=crop",
+    "https://images.unsplash.com/photo-1538688525198-9b88f6f53126?q=80&w=1200&auto=format&fit=crop",
+    "https://images.unsplash.com/photo-1449247613801-ab06418e2861?q=80&w=1200&auto=format&fit=crop"
+  ],
+  bed: [
+    "https://images.unsplash.com/photo-1505693416388-ac5ce068fe85?q=80&w=1200&auto=format&fit=crop",
+    "https://images.unsplash.com/photo-1505693533128-c7c8d8a3d7d3?q=80&w=1200&auto=format&fit=crop",
+    "https://images.unsplash.com/photo-1505693416388-ac5ce068fe85?q=80&w=1200&auto=format&fit=crop"
+  ],
+  chair: [
+    "https://images.unsplash.com/photo-1524758631624-e2822e304c36?q=80&w=1200&auto=format&fit=crop",
+    "https://images.unsplash.com/photo-1484101403633-562f891dc89a?q=80&w=1200&auto=format&fit=crop",
+    "https://images.unsplash.com/photo-1505843513577-22bb7d21e455?q=80&w=1200&auto=format&fit=crop"
+  ],
+  lighting: [
+    "https://images.unsplash.com/photo-1519710164239-da123dc03ef4?q=80&w=1200&auto=format&fit=crop",
+    "https://images.unsplash.com/photo-1502005097973-6a7082348e28?q=80&w=1200&auto=format&fit=crop",
+    "https://images.unsplash.com/photo-1540932239986-30128078f3c5?q=80&w=1200&auto=format&fit=crop"
+  ],
+  rug: [
+    "https://images.unsplash.com/photo-1575414003591-ece8d0416c7a?q=80&w=1200&auto=format&fit=crop",
+    "https://images.unsplash.com/photo-1513694203232-719a280e022f?q=80&w=1200&auto=format&fit=crop"
+  ],
+  plant: [
+    "https://images.unsplash.com/photo-1485955900006-10f4d324d411?q=80&w=1200&auto=format&fit=crop",
+    "https://images.unsplash.com/photo-1466692476868-aef1dfb1e735?q=80&w=1200&auto=format&fit=crop"
+  ],
+  storage: [
+    "https://images.unsplash.com/photo-1582582429416-47d89477f0e0?q=80&w=1200&auto=format&fit=crop",
+    "https://images.unsplash.com/photo-1505693416388-ac5ce068fe85?q=80&w=1200&auto=format&fit=crop"
+  ],
+  decor: [
+    "https://images.unsplash.com/photo-1505692794403-55c6f65f6e68?q=80&w=1200&auto=format&fit=crop",
+    "https://images.unsplash.com/photo-1519710164239-da123dc03ef4?q=80&w=1200&auto=format&fit=crop",
+    "https://images.unsplash.com/photo-1517705008128-361805f42e86?q=80&w=1200&auto=format&fit=crop"
+  ],
+  default: [
+    "https://images.unsplash.com/photo-1493663284031-b7e3aefcae8e?q=80&w=1200&auto=format&fit=crop",
+    "https://images.unsplash.com/photo-1505691938895-1758d7feb511?q=80&w=1200&auto=format&fit=crop",
+    "https://images.unsplash.com/photo-1555041469-a586c61ea9bc?q=80&w=1200&auto=format&fit=crop"
+  ]
+};
+
+function hashString(input) {
+  let h = 0;
+  for (let i = 0; i < input.length; i += 1) h = (h * 31 + input.charCodeAt(i)) >>> 0;
+  return h;
+}
+
+function pickCategory(title = "") {
+  const t = String(title).toLowerCase();
+  if (/(sofa|couch|recliner|ottoman|pouf|bean bag)/.test(t)) return "sofa";
+  if (/(tv unit|entertainment unit|bookshelf|shelf|wardrobe|storage|cabinet|drawer|shoe rack|book rack)/.test(t)) return "storage";
+  if (/(table|desk|console|dining|study)/.test(t)) return "table";
+  if (/(bed|mattress|duvet|bedsheet|bedside)/.test(t)) return "bed";
+  if (/(chair|stool)/.test(t)) return "chair";
+  if (/(lamp|light|lighting|pendant|ceiling)/.test(t)) return "lighting";
+  if (/(rug|carpet|mat)/.test(t)) return "rug";
+  if (/(plant|planter)/.test(t)) return "plant";
+  if (/(decor|mirror|art|clock|curtain|cushion)/.test(t)) return "decor";
+  return "default";
+}
+
+function placeholderImage(title, source) {
+  const key = pickCategory(title);
+  const pool = CATEGORY_IMAGE_POOLS[key] || CATEGORY_IMAGE_POOLS.default;
+  const idx = hashString(`${source || "store"}-${title || "product"}`) % pool.length;
+  return pool[idx];
+}
+
 function buildStoreUrl(store, keyword) {
   const q = encodeQ(keyword);
   if (store === "IKEA") return `https://www.ikea.com/in/en/search/?q=${q}`;
@@ -272,83 +349,6 @@ function isProductPage(url) {
 function isBadLanding(url) {
   const u = String(url || "").toLowerCase();
   return !u;
-}
-
-const CATEGORY_IMAGE_POOLS = {
-  sofa: [
-    "https://images.unsplash.com/photo-1493663284031-b7e3aefcae8e?q=80&w=1200&auto=format&fit=crop",
-    "https://images.unsplash.com/photo-1505693416388-ac5ce068fe85?q=80&w=1200&auto=format&fit=crop",
-    "https://images.unsplash.com/photo-1555041469-a586c61ea9bc?q=80&w=1200&auto=format&fit=crop"
-  ],
-  table: [
-    "https://images.unsplash.com/photo-1505693416388-ac5ce068fe85?q=80&w=1200&auto=format&fit=crop",
-    "https://images.unsplash.com/photo-1538688525198-9b88f6f53126?q=80&w=1200&auto=format&fit=crop",
-    "https://images.unsplash.com/photo-1449247613801-ab06418e2861?q=80&w=1200&auto=format&fit=crop"
-  ],
-  bed: [
-    "https://images.unsplash.com/photo-1505693416388-ac5ce068fe85?q=80&w=1200&auto=format&fit=crop",
-    "https://images.unsplash.com/photo-1505693533128-c7c8d8a3d7d3?q=80&w=1200&auto=format&fit=crop",
-    "https://images.unsplash.com/photo-1505693416388-ac5ce068fe85?q=80&w=1200&auto=format&fit=crop"
-  ],
-  chair: [
-    "https://images.unsplash.com/photo-1524758631624-e2822e304c36?q=80&w=1200&auto=format&fit=crop",
-    "https://images.unsplash.com/photo-1484101403633-562f891dc89a?q=80&w=1200&auto=format&fit=crop",
-    "https://images.unsplash.com/photo-1505843513577-22bb7d21e455?q=80&w=1200&auto=format&fit=crop"
-  ],
-  lighting: [
-    "https://images.unsplash.com/photo-1519710164239-da123dc03ef4?q=80&w=1200&auto=format&fit=crop",
-    "https://images.unsplash.com/photo-1502005097973-6a7082348e28?q=80&w=1200&auto=format&fit=crop",
-    "https://images.unsplash.com/photo-1540932239986-30128078f3c5?q=80&w=1200&auto=format&fit=crop"
-  ],
-  rug: [
-    "https://images.unsplash.com/photo-1575414003591-ece8d0416c7a?q=80&w=1200&auto=format&fit=crop",
-    "https://images.unsplash.com/photo-1513694203232-719a280e022f?q=80&w=1200&auto=format&fit=crop"
-  ],
-  plant: [
-    "https://images.unsplash.com/photo-1485955900006-10f4d324d411?q=80&w=1200&auto=format&fit=crop",
-    "https://images.unsplash.com/photo-1466692476868-aef1dfb1e735?q=80&w=1200&auto=format&fit=crop"
-  ],
-  storage: [
-    "https://images.unsplash.com/photo-1582582429416-47d89477f0e0?q=80&w=1200&auto=format&fit=crop",
-    "https://images.unsplash.com/photo-1505693416388-ac5ce068fe85?q=80&w=1200&auto=format&fit=crop"
-  ],
-  decor: [
-    "https://images.unsplash.com/photo-1505692794403-55c6f65f6e68?q=80&w=1200&auto=format&fit=crop",
-    "https://images.unsplash.com/photo-1519710164239-da123dc03ef4?q=80&w=1200&auto=format&fit=crop",
-    "https://images.unsplash.com/photo-1517705008128-361805f42e86?q=80&w=1200&auto=format&fit=crop"
-  ],
-  default: [
-    "https://images.unsplash.com/photo-1493663284031-b7e3aefcae8e?q=80&w=1200&auto=format&fit=crop",
-    "https://images.unsplash.com/photo-1505691938895-1758d7feb511?q=80&w=1200&auto=format&fit=crop",
-    "https://images.unsplash.com/photo-1555041469-a586c61ea9bc?q=80&w=1200&auto=format&fit=crop"
-  ]
-};
-
-function hashString(input) {
-  let h = 0;
-  for (let i = 0; i < input.length; i += 1) h = (h * 31 + input.charCodeAt(i)) >>> 0;
-  return h;
-}
-
-function pickCategory(title = "") {
-  const t = String(title).toLowerCase();
-  if (/(sofa|couch|recliner|ottoman|pouf|bean bag)/.test(t)) return "sofa";
-  if (/(tv unit|entertainment unit|bookshelf|shelf|wardrobe|storage|cabinet|drawer|shoe rack|book rack)/.test(t)) return "storage";
-  if (/(table|desk|console|dining|study)/.test(t)) return "table";
-  if (/(bed|mattress|duvet|bedsheet|bedside)/.test(t)) return "bed";
-  if (/(chair|stool)/.test(t)) return "chair";
-  if (/(lamp|light|lighting|pendant|ceiling)/.test(t)) return "lighting";
-  if (/(rug|carpet|mat)/.test(t)) return "rug";
-  if (/(plant|planter)/.test(t)) return "plant";
-  if (/(decor|mirror|art|clock|curtain|cushion)/.test(t)) return "decor";
-  return "default";
-}
-
-function placeholderImage(title, source) {
-  const key = pickCategory(title);
-  const pool = CATEGORY_IMAGE_POOLS[key] || CATEGORY_IMAGE_POOLS.default;
-  const idx = hashString(`${source || "store"}-${title || "product"}`) % pool.length;
-  return pool[idx];
 }
 
 function fallbackExactProducts(q, preferredStores) {

@@ -36,6 +36,18 @@ function fallbackImage(title, source) {
   return `https://picsum.photos/seed/${seed}/900/560`;
 }
 
+function persistMarketState(id, market, items, prefs) {
+  if (!id || !market) return;
+  localStorage.setItem(
+    `dreamnest_market_${id}`,
+    JSON.stringify({
+      ...market,
+      items,
+      prefs
+    })
+  );
+}
+
 function getWishlistMap() {
   try {
     const obj = JSON.parse(localStorage.getItem(WISHLIST_KEY) || "{}");
@@ -88,6 +100,68 @@ function detectCategory(product) {
   if (/(rug|carpet|decor|art|mirror|plant|clock|wall)/.test(text)) return "decor";
   if (/(bed|mattress|wardrobe|dresser|bedside)/.test(text)) return "bedroom";
   return "furniture";
+}
+
+function tokenizeText(value) {
+  return String(value || "")
+    .toLowerCase()
+    .split(/[^a-z0-9]+/g)
+    .filter(Boolean);
+}
+
+function getPersonalizationWeight(level) {
+  if (level === "strong") return 1.6;
+  if (level === "light") return 0.8;
+  return 1.2;
+}
+
+function buildMarketContext(market) {
+  const ctx = market?.context || {};
+  const rooms = Array.isArray(ctx.room_type) ? ctx.room_type : String(ctx.room_type || "").split(",");
+  const styles = Array.isArray(ctx.style_tags) ? ctx.style_tags : String(ctx.style_tags || "").split(",");
+  const mustHaves = Array.isArray(ctx.must_haves) ? ctx.must_haves : String(ctx.must_haves || "").split(",");
+  const colors = Array.isArray(ctx.colors) ? ctx.colors : String(ctx.colors || "").split(",");
+  const notes = tokenizeText(ctx.notes || "");
+
+  return {
+    rooms: rooms.map((r) => String(r).trim().toLowerCase()).filter(Boolean),
+    styles: styles.map((s) => String(s).trim().toLowerCase()).filter(Boolean),
+    mustHaves: mustHaves.map((m) => String(m).trim().toLowerCase()).filter(Boolean),
+    colors: colors.map((c) => String(c).trim().toLowerCase()).filter(Boolean),
+    notes
+  };
+}
+
+function scoreMarketplaceItem(item, context) {
+  const text = `${item?.title || ""} ${item?.recommended_for || ""} ${item?.source || ""}`.toLowerCase();
+  let score = 0;
+
+  for (const room of context.rooms) {
+    const compact = room.replace(/\s+/g, "");
+    if (text.includes(room)) score += 9;
+    if (compact && text.includes(compact)) score += 4;
+  }
+  for (const style of context.styles) {
+    if (style && text.includes(style)) score += 6;
+  }
+  for (const need of context.mustHaves) {
+    const words = tokenizeText(need);
+    if (words.length && words.every((word) => text.includes(word))) score += 10;
+    else score += words.reduce((acc, word) => acc + (text.includes(word) ? 2 : 0), 0);
+  }
+  for (const color of context.colors) {
+    if (color && text.includes(color)) score += 4;
+  }
+  score += context.notes.reduce((acc, word) => acc + (text.includes(word) ? 1 : 0), 0);
+
+  if (context.rooms.some((room) => room.includes("living")) && /(office|study|desk|workstation|wardrobe|bedroom|bed\b)/.test(text)) score -= 7;
+  if (context.rooms.some((room) => room.includes("bed")) && /(tv unit|dining|office chair|study table|workstation)/.test(text)) score -= 7;
+  if (context.rooms.some((room) => room.includes("study") || room.includes("office")) && /(sofa|rug flatwoven|bedside|duvet|bedsheet)/.test(text)) score -= 5;
+  if (/(chair|sofa|table|lamp|rug|storage|mirror|plant|shelf|unit)/.test(text)) score += 2;
+  if (item?.image_url) score += 2;
+  if (item?.rating) score += Number(item.rating) / 2;
+
+  return score;
 }
 
 function productKeywords(product) {
@@ -147,7 +221,19 @@ export default function ProductMarketplace() {
     s.src = "https://unpkg.com/@google/model-viewer/dist/model-viewer.min.js";
     s.setAttribute("data-model-viewer", "1");
     document.head.appendChild(s);
+
+    return () => {
+      if (document.head.contains(s)) document.head.removeChild(s);
+    };
   }, []);
+
+  useEffect(() => {
+    if (!market) return;
+    persistMarketState(id, market, products, {
+      store_priority: storePriority,
+      exact_only: exactOnly
+    });
+  }, [exactOnly, id, market, products, storePriority]);
 
   const stores = useMemo(() => {
     const vals = Array.from(new Set(products.map((p) => String(p.source || "unknown").toLowerCase())));
@@ -174,6 +260,8 @@ export default function ProductMarketplace() {
       .split(",")
       .map((s) => s.trim().toLowerCase())
       .filter(Boolean);
+    const context = buildMarketContext(market);
+    const personalizationWeight = getPersonalizationWeight(market?.prefs?.personalization_strength);
     const arr = products.filter((p) => {
       const okStore = store === "all" || String(p.source || "").toLowerCase() === store;
       const hay = `${p.title || ""} ${p.recommended_for || ""} ${p.source || ""}`.toLowerCase();
@@ -192,7 +280,8 @@ export default function ProductMarketplace() {
           const storeScore = Number(userPref.stores?.[storeKey] || 0) * 5;
           const catScore = Number(userPref.categories?.[catKey] || 0) * 3;
           const kwScore = kws.reduce((acc, k) => acc + Number(userPref.keywords?.[k] || 0), 0);
-          return storeScore + catScore + kwScore;
+          const contextScore = scoreMarketplaceItem(item, context);
+          return storeScore + catScore + kwScore + contextScore * personalizationWeight;
         };
         const ds = score(b) - score(a);
         if (ds !== 0) return ds;
@@ -282,17 +371,10 @@ export default function ProductMarketplace() {
       }
       const merged = sanitizeMarketItems(Array.from(mergedMap.values()).slice(0, 220));
       setProducts(merged);
-      localStorage.setItem(
-        `dreamnest_market_${id}`,
-        JSON.stringify({
-          ...market,
-          items: merged,
-          prefs: {
-            store_priority: storePriority,
-            exact_only: exactOnly
-          }
-        })
-      );
+      persistMarketState(id, market, merged, {
+        store_priority: storePriority,
+        exact_only: exactOnly
+      });
     } catch (e) {
       setLoadError(String(e?.message || e));
     } finally {
@@ -423,7 +505,7 @@ export default function ProductMarketplace() {
           <div className="market-store-chips">
             {stores.map((s) => (
               <span key={s} className="market-chip">
-                {s.toUpperCase()} � {storeCounts[s]}
+                {s.toUpperCase()} | {storeCounts[s]}
               </span>
             ))}
           </div>
