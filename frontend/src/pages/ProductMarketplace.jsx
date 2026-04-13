@@ -1,12 +1,15 @@
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { ProductsAPI } from "../api/endpoints";
+import { useAuth } from "../hooks/useAuth";
 import SiteFooter from "../components/SiteFooter";
 
 const WISHLIST_KEY = "dreamnest_wishlist_items";
 const PAGE_SIZE_DEFAULT = 9;
 const AR_MODEL_KEY = "dreamnest_ar_models";
-const USER_PREF_KEY = "dreamnest_user_pref_v1";
+const USER_PREF_KEY = (userId) => `dreamnest_user_pref_${userId || "anon"}`;
+const PROJECT_PREF_KEY = (userId, projectId) =>
+  `dreamnest_project_pref_${userId || "anon"}_${projectId || "unknown"}`;
 
 function sanitizeMarketItems(items) {
   if (!Array.isArray(items)) return [];
@@ -74,23 +77,84 @@ function setArModelMap(map) {
   localStorage.setItem(AR_MODEL_KEY, JSON.stringify(map));
 }
 
-function getUserPref() {
+function decodeJwtPayload(token) {
+  if (!token) return null;
   try {
-    const obj = JSON.parse(localStorage.getItem(USER_PREF_KEY) || "{}");
-    return obj && typeof obj === "object"
-      ? {
-          stores: obj.stores && typeof obj.stores === "object" ? obj.stores : {},
-          categories: obj.categories && typeof obj.categories === "object" ? obj.categories : {},
-          keywords: obj.keywords && typeof obj.keywords === "object" ? obj.keywords : {}
-        }
-      : { stores: {}, categories: {}, keywords: {} };
+    const payload = token.split(".")[1];
+    if (!payload) return null;
+    const base = payload.replace(/-/g, "+").replace(/_/g, "/");
+    const json = decodeURIComponent(
+      atob(base)
+        .split("")
+        .map((c) => `%${`00${c.charCodeAt(0).toString(16)}`.slice(-2)}`)
+        .join("")
+    );
+    return JSON.parse(json);
+  } catch {
+    return null;
+  }
+}
+
+function getUserIdFromToken(token) {
+  const payload = decodeJwtPayload(token);
+  return payload?.userId || payload?.id || payload?.sub || "";
+}
+
+function normalizePref(obj) {
+  return obj && typeof obj === "object"
+    ? {
+        stores: obj.stores && typeof obj.stores === "object" ? obj.stores : {},
+        categories: obj.categories && typeof obj.categories === "object" ? obj.categories : {},
+        keywords: obj.keywords && typeof obj.keywords === "object" ? obj.keywords : {}
+      }
+    : { stores: {}, categories: {}, keywords: {} };
+}
+
+function readPref(key) {
+  try {
+    return normalizePref(JSON.parse(localStorage.getItem(key) || "{}"));
   } catch {
     return { stores: {}, categories: {}, keywords: {} };
   }
 }
 
-function setUserPref(pref) {
-  localStorage.setItem(USER_PREF_KEY, JSON.stringify(pref));
+function writePref(key, pref) {
+  localStorage.setItem(key, JSON.stringify(pref));
+}
+
+function mergePref(user, project, weights) {
+  const merged = { stores: {}, categories: {}, keywords: {} };
+  const apply = (source, weight) => {
+    Object.entries(source?.stores || {}).forEach(([k, v]) => {
+      merged.stores[k] = (merged.stores[k] || 0) + Number(v) * weight;
+    });
+    Object.entries(source?.categories || {}).forEach(([k, v]) => {
+      merged.categories[k] = (merged.categories[k] || 0) + Number(v) * weight;
+    });
+    Object.entries(source?.keywords || {}).forEach(([k, v]) => {
+      merged.keywords[k] = (merged.keywords[k] || 0) + Number(v) * weight;
+    });
+  };
+  apply(user, weights.user);
+  apply(project, weights.project);
+  return merged;
+}
+
+function getPrefWeights(strength) {
+  if (strength === "strong") return { user: 0.3, project: 0.7 };
+  if (strength === "light") return { user: 0.55, project: 0.45 };
+  return { user: 0.4, project: 0.6 };
+}
+
+function buildPrefState(userId, projectId, strength) {
+  const userPref = readPref(USER_PREF_KEY(userId));
+  const projectPref = readPref(PROJECT_PREF_KEY(userId, projectId));
+  const weights = getPrefWeights(strength);
+  return {
+    user: userPref,
+    project: projectPref,
+    merged: mergePref(userPref, projectPref, weights)
+  };
 }
 
 function detectCategory(product) {
@@ -110,7 +174,7 @@ function tokenizeText(value) {
 }
 
 function getPersonalizationWeight(level) {
-  if (level === "strong") return 1.6;
+  if (level === "strong") return 2.0;
   if (level === "light") return 0.8;
   return 1.2;
 }
@@ -176,6 +240,8 @@ function productKeywords(product) {
 export default function ProductMarketplace() {
   const nav = useNavigate();
   const { id } = useParams();
+  const { token } = useAuth();
+  const userId = useMemo(() => getUserIdFromToken(token), [token]);
   const marketRaw = localStorage.getItem(`dreamnest_market_${id}`);
   let market = null;
   try {
@@ -195,7 +261,10 @@ export default function ProductMarketplace() {
   );
   const [exactOnly, setExactOnly] = useState(Boolean(market?.prefs?.exact_only));
   const [wishlistMap, setWishlistState] = useState(getWishlistMap);
-  const [userPref, setUserPrefState] = useState(getUserPref);
+  const [prefState, setPrefState] = useState(() =>
+    buildPrefState(userId, id, market?.prefs?.personalization_strength)
+  );
+  const mergedPref = prefState.merged;
   const [compare, setCompare] = useState([]);
   const [isLoadingMore, setIsLoadingMore] = useState(false);
   const [loadError, setLoadError] = useState("");
@@ -231,9 +300,14 @@ export default function ProductMarketplace() {
     if (!market) return;
     persistMarketState(id, market, products, {
       store_priority: storePriority,
-      exact_only: exactOnly
+      exact_only: exactOnly,
+      personalization_strength: market?.prefs?.personalization_strength || "strong"
     });
   }, [exactOnly, id, market, products, storePriority]);
+
+  useEffect(() => {
+    setPrefState(buildPrefState(userId, id, market?.prefs?.personalization_strength));
+  }, [id, market?.prefs?.personalization_strength, userId]);
 
   const stores = useMemo(() => {
     const vals = Array.from(new Set(products.map((p) => String(p.source || "unknown").toLowerCase())));
@@ -267,7 +341,12 @@ export default function ProductMarketplace() {
       const hay = `${p.title || ""} ${p.recommended_for || ""} ${p.source || ""}`.toLowerCase();
       const okQuery = !query.trim() || hay.includes(query.trim().toLowerCase());
       const okExact = !exactOnly || looksExactProduct(p.product_url);
-      return okStore && okQuery && okExact;
+      if (!okStore || !okQuery || !okExact) return false;
+      if (market?.prefs?.personalization_strength === "strong") {
+        const contextScore = scoreMarketplaceItem(p, context);
+        if (contextScore < -2) return false;
+      }
+      return true;
     });
 
     const sorted = [...arr];
@@ -277,9 +356,9 @@ export default function ProductMarketplace() {
           const storeKey = String(item.source || "").toLowerCase();
           const catKey = detectCategory(item);
           const kws = productKeywords(item);
-          const storeScore = Number(userPref.stores?.[storeKey] || 0) * 5;
-          const catScore = Number(userPref.categories?.[catKey] || 0) * 3;
-          const kwScore = kws.reduce((acc, k) => acc + Number(userPref.keywords?.[k] || 0), 0);
+          const storeScore = Number(mergedPref.stores?.[storeKey] || 0) * 5;
+          const catScore = Number(mergedPref.categories?.[catKey] || 0) * 3;
+          const kwScore = kws.reduce((acc, k) => acc + Number(mergedPref.keywords?.[k] || 0), 0);
           const contextScore = scoreMarketplaceItem(item, context);
           return storeScore + catScore + kwScore + contextScore * personalizationWeight;
         };
@@ -422,21 +501,30 @@ export default function ProductMarketplace() {
   }
 
   function learnFromAction(item, weight = 1) {
-    const storeKey = String(item?.source || "").toLowerCase();
-    const catKey = detectCategory(item);
-    const kws = productKeywords(item);
-    const next = {
-      stores: { ...(userPref.stores || {}) },
-      categories: { ...(userPref.categories || {}) },
-      keywords: { ...(userPref.keywords || {}) }
+    const updatePref = (base, bump) => {
+      const storeKey = String(item?.source || "").toLowerCase();
+      const catKey = detectCategory(item);
+      const kws = productKeywords(item);
+      const next = {
+        stores: { ...(base.stores || {}) },
+        categories: { ...(base.categories || {}) },
+        keywords: { ...(base.keywords || {}) }
+      };
+      next.stores[storeKey] = Number(next.stores[storeKey] || 0) + bump;
+      next.categories[catKey] = Number(next.categories[catKey] || 0) + bump;
+      kws.forEach((k) => {
+        next.keywords[k] = Number(next.keywords[k] || 0) + Math.max(0.4, bump / 2);
+      });
+      return next;
     };
-    next.stores[storeKey] = Number(next.stores[storeKey] || 0) + weight;
-    next.categories[catKey] = Number(next.categories[catKey] || 0) + weight;
-    kws.forEach((k) => {
-      next.keywords[k] = Number(next.keywords[k] || 0) + Math.max(0.4, weight / 2);
-    });
-    setUserPrefState(next);
-    setUserPref(next);
+
+    const nextUser = updatePref(prefState.user, weight * 0.6);
+    const nextProject = updatePref(prefState.project, weight * 1.1);
+    const weights = getPrefWeights(market?.prefs?.personalization_strength);
+    const merged = mergePref(nextUser, nextProject, weights);
+    setPrefState({ user: nextUser, project: nextProject, merged });
+    writePref(USER_PREF_KEY(userId), nextUser);
+    writePref(PROJECT_PREF_KEY(userId, id), nextProject);
   }
 
   function openPreview(item) {

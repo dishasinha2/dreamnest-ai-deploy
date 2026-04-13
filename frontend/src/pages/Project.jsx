@@ -1,10 +1,64 @@
-import { startTransition, useEffect, useState } from "react";
+import { startTransition, useEffect, useMemo, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { assetUrl } from "../api/client";
 import { AIAPI, ClicksAPI, ProductsAPI, ProjectAPI, RequirementsAPI, VendorsAPI } from "../api/endpoints";
 import { useAuth } from "../hooks/useAuth";
 import AmbientCanvas from "../components/AmbientCanvas";
 import SiteFooter from "../components/SiteFooter";
+
+const DEFAULT_MARKET_PREFS = {
+  store_priority: "ikea,flipkart,myntra,amazon,pepperfry,urbanladder,meesho,ebay",
+  exact_only: false,
+  personalization_strength: "strong"
+};
+
+function decodeJwtPayload(token) {
+  if (!token) return null;
+  try {
+    const payload = token.split(".")[1];
+    if (!payload) return null;
+    const base = payload.replace(/-/g, "+").replace(/_/g, "/");
+    const json = decodeURIComponent(
+      atob(base)
+        .split("")
+        .map((c) => `%${`00${c.charCodeAt(0).toString(16)}`.slice(-2)}`)
+        .join("")
+    );
+    return JSON.parse(json);
+  } catch {
+    return null;
+  }
+}
+
+function getUserIdFromToken(token) {
+  const payload = decodeJwtPayload(token);
+  return payload?.userId || payload?.id || payload?.sub || "";
+}
+
+function MARKET_PREF_USER_KEY(userId) {
+  return `dreamnest_market_pref_user_${userId || "anon"}`;
+}
+
+function MARKET_PREF_PROJECT_KEY(userId, projectId) {
+  return `dreamnest_market_pref_${userId || "anon"}_${projectId || "unknown"}`;
+}
+
+function readMarketPrefs(key) {
+  try {
+    const obj = JSON.parse(localStorage.getItem(key) || "{}");
+    return obj && typeof obj === "object" ? obj : null;
+  } catch {
+    return null;
+  }
+}
+
+function normalizeMarketPrefs(obj) {
+  return {
+    store_priority: String(obj?.store_priority || DEFAULT_MARKET_PREFS.store_priority),
+    exact_only: Boolean(obj?.exact_only),
+    personalization_strength: String(obj?.personalization_strength || DEFAULT_MARKET_PREFS.personalization_strength)
+  };
+}
 
 function asArray(v) {
   if (!v) return [];
@@ -144,11 +198,8 @@ export default function Project() {
   const [reqForm, setReqForm] = useState({ notes: "", must_haves: "", colors: "" });
   const [error, setError] = useState("");
   const [notice, setNotice] = useState("");
-  const [marketPrefs, setMarketPrefs] = useState({
-    store_priority: "ikea,flipkart,myntra,amazon,pepperfry,urbanladder,meesho,ebay",
-    exact_only: false,
-    personalization_strength: "balanced"
-  });
+  const userId = useMemo(() => getUserIdFromToken(token), [token]);
+  const [marketPrefs, setMarketPrefs] = useState(DEFAULT_MARKET_PREFS);
   const [checkMap, setCheckMap] = useState({});
   const [timelineMap, setTimelineMap] = useState({});
   const [themeMode, setThemeMode] = useState(() => document.documentElement.dataset.theme || localStorage.getItem("dreamnest_theme") || "dark");
@@ -168,6 +219,24 @@ export default function Project() {
     RequirementsAPI.list(id, token).then(setRequirements).catch(() => {});
     ProjectAPI.shortlistedVendors(id, token).then(setShortlistedVendors).catch(() => {});
   }, [id, token]);
+
+  useEffect(() => {
+    if (!userId) {
+      setMarketPrefs(DEFAULT_MARKET_PREFS);
+      return;
+    }
+    const projectPrefs = readMarketPrefs(MARKET_PREF_PROJECT_KEY(userId, id));
+    const userPrefs = readMarketPrefs(MARKET_PREF_USER_KEY(userId));
+    const next = normalizeMarketPrefs(projectPrefs || userPrefs || DEFAULT_MARKET_PREFS);
+    setMarketPrefs(next);
+  }, [id, userId]);
+
+  useEffect(() => {
+    if (!userId) return;
+    const prefs = normalizeMarketPrefs(marketPrefs);
+    localStorage.setItem(MARKET_PREF_USER_KEY(userId), JSON.stringify(prefs));
+    localStorage.setItem(MARKET_PREF_PROJECT_KEY(userId, id), JSON.stringify(prefs));
+  }, [id, marketPrefs, userId]);
 
   useEffect(() => {
     try {
